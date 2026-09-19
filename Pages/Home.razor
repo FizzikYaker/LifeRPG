@@ -1,151 +1,192 @@
-﻿@* @page — указывает URL-адрес страницы ("/" значит главная страница) *@
-@page "/"
-
-@* Подключаем наши модели из папки LifeRPG.Models *@
+﻿@page "/"
 @using LifeRPG.Models
+@using System.Globalization @* Подключаем для русской локализации дат *@
 
-<PageTitle>Life RPG — Профиль</PageTitle>
+<PageTitle>Life RPG — Главный экран</PageTitle>
 
-<div class="container mt-4">
+<div class="d-flex flex-column vh-100 bg-dark text-white">
 
-    @* ==================== БЛОК 1: ПРОФИЛЬ ИГРОКА ==================== *@
-    <div class="card bg-dark text-white mb-4 shadow">
-        <div class="card-body text-center">
-            @* Имя и текущий уровень *@
-            <h2 class="card-title">⚔️ @player.Name (Уровень @player.Level)</h2>
+    @* ==================== 1. ФИКСИРОВАННАЯ ШАПКА ==================== *@
+    <header class="d-flex justify-content-between align-items-center p-3 bg-black border-bottom border-secondary shadow sticky-top z-3">
+        <div class="fs-5">
+            🔥 Стрик: <strong class="text-danger">@currentStreak дней</strong>
+        </div>
 
-            @* Баланс золота *@
-            <h3 class="text-warning my-3">💰 @player.GoldBalance золота</h3>
+        <div class="fs-4">
+            💰 Золото: <strong class="text-warning">@player.GoldBalance gold</strong>
+        </div>
 
-            @* Шкала опыта (XP Progress Bar) *@
-            <div class="mb-2 text-start">
-                <small>Опыт: @player.CurrentXP / @player.RequiredXP XP</small>
-            </div>
-            <div class="progress bg-secondary" style="height: 20px;">
-                @* Рассчитываем процент заполнения шкалы *@
+        <div class="d-flex align-items-center gap-2">
+            <span class="fs-5 fw-bold">Уровень @player.Level</span>
+            <div class="progress rounded-pill bg-secondary" style="width: 180px; height: 22px;">
                 @{
                     var progressPercent = (player.CurrentXP * 100) / player.RequiredXP;
                 }
-                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated"
-                     role="progressbar"
-                     style="width: @(progressPercent)%">
+                <div class="progress-bar bg-success rounded-pill fw-bold" style="width: @(progressPercent)%">
                     @(progressPercent)%
                 </div>
             </div>
         </div>
-    </div>
+    </header>
 
-    @* ==================== БЛОК 2: СПИСОК КВЕСТОВ ==================== *@
-    <h3 class="mb-3">📜 Квесты и привычки</h3>
-    <div class="row">
-        @* Цикл @foreach проходит по всем квестам из списка quests *@
-        @foreach (var quest in quests)
-        {
-            <div class="col-md-6 mb-3">
-                @* Если квест выполнен или пропущен, карточка станет полупрозрачной *@
-                <div class="card h-100 @(quest.IsCompleted ? "border-success opacity-75" : quest.IsSkipped ? "border-secondary opacity-50" : "")">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            @* Иконка в зависимости от типа квеста *@
-                            @if (quest.Type == QuestType.WorkShift)
-                            {
-                                <span>🛠️</span>
-                            }
-                            else if (quest.Type == QuestType.Study)
-                            {
+    @* Нижний блок *@
+    <div class="d-flex flex-grow-1">
 
-                                <span>📚</span>
-                            }
-                            else if (quest.Type == QuestType.PetProject)
-                            {
+        @* ==================== 2. БОКОВОЕ МЕНЮ ==================== *@
+        <nav class="p-3 bg-black border-end border-secondary" style="width: 220px;">
+            <ul class="nav nav-pills flex-column gap-2">
+                <li class="nav-item">
+                    <button class="nav-link text-white w-100 text-start @(activeTab == "work" ? "active bg-primary" : "")"
+                            @onclick='() => activeTab = "work"'>
+                        🛠️ Работа
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link text-white w-100 text-start @(activeTab == "money" ? "active bg-primary" : "")"
+                            @onclick='() => activeTab = "money"'>
+                        💳 Деньги / Магазин
+                    </button>
+                </li>
+            </ul>
+        </nav>
 
-                                <span>💻</span>
-                            }
-                            else
-                            {
+        @* ==================== 3. ОСНОВНОЙ КОНТЕНТ ==================== *@
+        <main class="flex-grow-1 p-4 overflow-auto">
 
-                                <span>💧</span>
-                            }
-
-                            @quest.Title
-                        </h5>
-
-                        <p class="card-text text-muted">
-                            Награда: <strong class="text-warning">+@quest.GetCalculatedReward() gold</strong>
-                        </p>
-
-                        @* Статусы и кнопки *@
-                        @if (quest.IsCompleted)
+            @if (activeTab == "work")
+            {
+                @* Динамический календарь с реальными датами ПК *@
+                <section class="card bg-secondary text-white mb-4 p-3 shadow border-0">
+                    <h4 class="card-title mb-3">📅 КАЛЕНДАРЬ НА 7 ДНЕЙ (Начиная с сегодня)</h4>
+                    <div class="d-flex justify-content-between text-center gap-2">
+                        @foreach (var day in weekDays)
                         {
-                            <span class="badge bg-success">Выполнено! 🎉</span>
-                        }
-                        else if (quest.IsSkipped)
-                        {
-                            <span class="badge bg-secondary">Отменено (без штрафа) 🛌</span>
-                        }
-                        else
-                        {
-                            @* Кнопка выполнения *@
-                            <button class="btn btn-primary me-2" @onclick="() => CompleteQuest(quest)">
-                                Выполнить
-                            </button>
-
-                            @* Кнопка пропуск учебы (если тип квеста — Study) *@
-                            @if (quest.Type == QuestType.Study)
-                            {
-                                <button class="btn btn-outline-secondary" @onclick="() => SkipQuest(quest)">
-                                    Сегодня учебы нет
-                                </button>
-                            }
+                            @* Выделяем сегодняшнюю дату яркой рамкой border-warning *@
+                            var isToday = day.Date == DateTime.Today;
+                            <div class="p-2 bg-dark rounded flex-fill border @(isToday ? "border-warning border-2" : "border-secondary")">
+                                @* Выводим название дня недели и число/месяц *@
+                                <small class="d-block text-muted">@day.ToString("ddd, dd.MM", ruCulture)</small>
+                                <strong>@(isToday ? "Сегодня 🌟" : "План 📝")</strong>
+                            </div>
                         }
                     </div>
-                </div>
-            </div>
-        }
-    </div>
+                </section>
 
-    @* ==================== БЛОК 3: МАГАЗИН НАГРАД ==================== *@
-    <h3 class="my-4">🏪 Магазин наград</h3>
-    <div class="row mb-5">
-        @foreach (var reward in rewards)
-        {
-            <div class="col-md-4 mb-3">
-                <div class="card text-center h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">🎁 @reward.Title</h5>
-                        <p class="card-text text-danger fs-5">
-                            <strong>@reward.PriceGold gold</strong>
-                        </p>
+                @* Задачи и тайм-менеджмент *@
+                <section>
+                    <h4 class="mb-3">⏰ Расписание и задачи на сегодня</h4>
+                    <div class="list-group">
+                        @foreach (var quest in quests)
+                        {
+                            <div class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between align-items-center mb-2 rounded @(quest.IsCompleted ? "opacity-50" : "")">
+                                <div>
+                                    <h5 class="mb-1">
+                                        @if (quest.ScheduledTime.HasValue)
+                                        {
+                                            <span class="badge bg-info me-2 fs-6">
+                                                ⏱️ @quest.GetFormattedTimeRange()
+                                            </span>
+                                        }
+                                        @quest.Title
+                                    </h5>
+                                    <small class="text-warning">+@quest.GetCalculatedReward() gold</small>
+                                </div>
 
-                        @* Кнопка покупки: отключается (disabled), если не хватает золота *@
-                        <button class="btn btn-warning w-100"
-                                disabled="@(player.GoldBalance < reward.PriceGold)"
-                                @onclick="() => BuyReward(reward)">
-                            Купить
-                        </button>
+                                <div>
+                                    @if (quest.IsCompleted)
+                                    {
+                                        <span class="badge bg-success fs-6">Выполнено 🎉</span>
+                                    }
+                                    else if (quest.IsSkipped)
+                                    {
+                                        <span class="badge bg-secondary fs-6">Задач нет 🛌</span>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-primary me-2" @onclick="() => CompleteQuest(quest)">
+                                            Выполнить
+                                        </button>
+
+                                        @if (quest.Type == QuestType.Study)
+                                        {
+                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => SkipQuest(quest)">
+                                                Сегодня учебы нет
+                                            </button>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
                     </div>
-                </div>
-            </div>
-        }
-    </div>
+                </section>
+            }
+            else if (activeTab == "money")
+            {
+                <section>
+                    <h4 class="mb-3">💳 Финансы и Магазин наград</h4>
+                    <div class="row">
+                        @foreach (var reward in rewards)
+                        {
+                            <div class="col-md-4 mb-3">
+                                <div class="card bg-dark text-white border-secondary h-100 text-center">
+                                    <div class="card-body">
+                                        <h5>🎁 @reward.Title</h5>
+                                        <p class="text-warning fs-5">@reward.PriceGold gold</p>
+                                        <button class="btn btn-warning w-100"
+                                                disabled="@(player.GoldBalance < reward.PriceGold)"
+                                                @onclick="() => BuyReward(reward)">
+                                            Купить
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
 
+        </main>
+    </div>
 </div>
-@* ==================== БЛОК C#-ЛОГИКИ (@code) ==================== *@
-@code {
-    // 1. Создаем объект игрока
-    private PlayerProfile player = new PlayerProfile();
 
-    // 2. Тестовый список квестов
+@code {
+    private PlayerProfile player = new PlayerProfile();
+    private int currentStreak = 5;
+    private string activeTab = "work";
+
+    // Настройка русской культуры для красивого отображения дней ("сб", "вс", "пн")
+    private CultureInfo ruCulture = new CultureInfo("ru-RU");
+
+    // C#-свойство: автоматическая генерация списка из 7 дней, начиная с сегодняшнего дня на ПК
+    private List<DateTime> weekDays => Enumerable.Range(0, 7)
+        .Select(offset => DateTime.Today.AddDays(offset))
+        .ToList();
+
     private List<QuestItem> quests = new List<QuestItem>
     {
-        new QuestItem { Title = "Дневная смена на работе", RewardGold = 500, Type = QuestType.WorkShift },
-        new QuestItem { Title = "Ночная смена на работе", RewardGold = 500, Type = QuestType.WorkShift, IsNightShift = true },
-        new QuestItem { Title = "Учеба: Задание от куратора (1 час)", RewardGold = 400, Type = QuestType.Study },
-        new QuestItem { Title = "Кодинг C# / Life RPG (1 час)", RewardGold = 300, Type = QuestType.PetProject },
-        new QuestItem { Title = "Выпил 2л воды / Не ел фастфуд", RewardGold = 100, Type = QuestType.Daily }
+        new QuestItem {
+            Title = "Дневная смена на работе",
+            RewardGold = 500,
+            Type = QuestType.WorkShift,
+            ScheduledTime = new TimeSpan(08, 00, 0),
+            DurationMinutes = 720
+        },
+        new QuestItem {
+            Title = "Учеба: Задание от куратора",
+            RewardGold = 400,
+            Type = QuestType.Study,
+            ScheduledTime = new TimeSpan(17, 00, 0),
+            DurationMinutes = 120
+        },
+        new QuestItem {
+            Title = "Разработка Life RPG на C#",
+            RewardGold = 300,
+            Type = QuestType.PetProject,
+            ScheduledTime = new TimeSpan(20, 00, 0),
+            DurationMinutes = 90
+        }
     };
 
-    // 3. Тестовый список наград в магазине
     private List<RewardItem> rewards = new List<RewardItem>
     {
         new RewardItem { Title = "Попить пива вечером", PriceGold = 100 },
@@ -154,22 +195,19 @@
         new RewardItem { Title = "Весь день играть в видеоигры", PriceGold = 800 }
     };
 
-    // Метод выполнения квеста
     private void CompleteQuest(QuestItem quest)
     {
-        quest.IsCompleted = true;                     // Помечаем выполненным
-        player.AddGoldAndXP(quest.GetCalculatedReward()); // Начисляем золото и опыт
+        quest.IsCompleted = true;
+        player.AddGoldAndXP(quest.GetCalculatedReward());
     }
 
-    // Метод отмены учебы ("Сегодня учебы нет")
     private void SkipQuest(QuestItem quest)
     {
-        quest.SkipTask(); // Вызываем метод пропуска без штрафа
+        quest.SkipTask();
     }
 
-    // Метод покупки в магазине
     private void BuyReward(RewardItem reward)
     {
-        player.TrySpendGold(reward.PriceGold); // Списываем золото
+        player.TrySpendGold(reward.PriceGold);
     }
 }
