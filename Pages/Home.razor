@@ -4,11 +4,10 @@
 
 <PageTitle>Life RPG — Главный экран</PageTitle>
 
-@* Главный контейнер на весь экран *@
 <div class="d-flex flex-column vh-100 bg-dark text-white overflow-hidden">
 
-    @* ==================== 1. ФИКСИРОВАННАЯ ШАПКА ==================== *@
-    <header class="d-flex justify-content-between align-items-center p-3 bg-black border-bottom border-secondary shadow-sm flex-shrink-0">
+    @* ==================== 1. ЗАКРЕПЛЕННАЯ ШАПКА ==================== *@
+    <header class="d-flex justify-content-between align-items-center p-3 bg-black border-bottom border-secondary shadow-sm flex-shrink-0 sticky-top z-3">
         <div class="fs-5 fw-bold">
             🔥 Стрик: <span class="text-danger">@currentStreak дней</span>
         </div>
@@ -30,7 +29,7 @@
         </div>
     </header>
 
-    @* Нижний блок: Меню + Контент *@
+    @* Основная область: Боковое меню + Экран *@
     <div class="d-flex flex-grow-1 overflow-hidden">
 
         @* ==================== 2. БОКОВОЕ МЕНЮ ==================== *@
@@ -39,7 +38,13 @@
                 <li class="nav-item">
                     <button class="nav-link text-white w-100 text-start @(activeTab == "work" ? "active bg-primary fw-bold" : "")"
                             @onclick='() => activeTab = "work"'>
-                        🛠️ Расписание и Задачи
+                        🛠️ Задачи и Календарь
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link text-white w-100 text-start @(activeTab == "add-task" ? "active bg-success fw-bold" : "")"
+                            @onclick='() => activeTab = "add-task"'>
+                        ➕ Добавить задачу
                     </button>
                 </li>
                 <li class="nav-item">
@@ -51,87 +56,73 @@
             </ul>
         </nav>
 
-        @* ==================== 3. ОСНОВНОЙ КОНТЕНТ ==================== *@
+        @* ==================== 3. ОСНОВНОЙ ЭКРАН ==================== *@
         <main class="flex-grow-1 p-4 overflow-auto">
 
             @if (activeTab == "work")
             {
-                @* 📊 БЛОК 1: КАЛЬКУЛЯТОР БЮДЖЕТА ВРЕМЕНИ (24 ЧАСА) *@
+                @* 📊 ТАЙМ-МЕНЕДЖМЕНТ (БЮДЖЕТ 24 ЧАСА) *@
                 <section class="card bg-black border-primary text-white mb-4 p-3 shadow">
                     <h5 class="card-title text-info mb-3">⏱️ Суточный бюджет времени (24 часа)</h5>
-                    <div class="row text-center mb-2">
-                        <div class="col-md-3">
-                            <span class="d-block text-light opacity-75">🛌 Сон</span>
-                            <strong class="fs-5 text-white">@sleepHours ч</strong>
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <span class="d-block text-light opacity-75">✅ Выполнено задач</span>
+                            <strong class="fs-4 text-success">@GetCompletedTasksHours() / @GetTotalTasksHours() ч</strong>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <span class="d-block text-light opacity-75">🚗 Дорога</span>
-                            <strong class="fs-5 text-white">@commuteHours ч</strong>
+                            <strong class="fs-4 text-white">@commuteHours ч</strong>
                         </div>
-                        <div class="col-md-3">
-                            <span class="d-block text-light opacity-75">📋 Занято задачами</span>
-                            <strong class="fs-5 text-warning">@GetTotalTasksHours() ч</strong>
-                        </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <span class="d-block text-light opacity-75">🎉 Свободный остаток</span>
-                            <strong class="fs-5 @(GetFreeHours() < 0 ? "text-danger" : "text-success")">
+                            <strong class="fs-4 @(GetFreeHours() < 0 ? "text-danger" : "text-warning")">
                                 @GetFreeHours() ч
                             </strong>
                         </div>
                     </div>
                 </section>
 
-                @* 📅 БЛОК 2: ДИНАМИЧЕСКИЙ КАЛЕНДАРЬ С ДАТАМИ ПК *@
-                <section class="card bg-secondary text-white mb-4 p-3 shadow border-0">
-                    <h5 class="card-title mb-3 text-warning">📅 Календарь на 7 дней (с сегодняшнего дня)</h5>
-                    <div class="d-flex justify-content-between text-center gap-2">
-                        @foreach (var day in weekDays)
+                @* 📅 ИНТЕРАКТИВНЫЙ КАЛЕНДАРЬ СМЕН В СТИЛЕ СКРИНШОТА *@
+                <section class="card bg-light text-dark mb-4 p-3 shadow border-0 rounded-4" style="max-width: 520px; margin: 0 auto;">
+
+                    @* Шапка календаря: Кнопки < > и название месяца *@
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <button class="btn btn-outline-danger btn-sm fw-bold rounded-3 px-3 fs-5" @onclick="PrevMonth">&lt;</button>
+                        <h4 class="fw-bold m-0 text-danger text-capitalize">
+                            @currentMonth.ToString("MMMM yyyy", ruCulture)
+                        </h4>
+                        <button class="btn btn-outline-danger btn-sm fw-bold rounded-3 px-3 fs-5" @onclick="NextMonth">&gt;</button>
+                    </div>
+
+                    @* Дни недели *@
+                    <div class="calendar-grid mb-2 text-center text-muted fw-bold">
+                        <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+                    </div>
+
+                    @* Сетка дней месяца *@
+                    <div class="calendar-grid">
+                        @* Пустые ячейки-отступы перед 1-м числом месяца *@
+                        @for (int i = 0; i < GetFirstDayOffset(); i++)
                         {
+                            <div></div>
+                        }
+
+                        @* Дни текущего месяца *@
+                        @foreach (var day in monthDays)
+                        {
+                            var shift = GetShiftDetails(day);
                             var isToday = day.Date == DateTime.Today;
-                            <div class="p-2 bg-dark rounded flex-fill border @(isToday ? "border-warning border-2 bg-black" : "border-secondary")">
-                                @* Яркие контрастные цвета вместо блеклого серого *@
-                                <small class="d-block text-info fw-bold">@day.ToString("ddd, dd.MM", ruCulture)</small>
-                                <strong class="@(isToday ? "text-warning" : "text-white")">
-                                    @(isToday ? "Сегодня 🌟" : "План 📝")
-                                </strong>
+
+                            <div class="calendar-card rounded-3 p-1 text-center d-flex flex-column justify-content-between @shift.CssClass @(isToday ? "border border-3 border-warning shadow" : "")">
+                                <div class="fw-bold fs-6">@day.Day</div>
+                                <div class="fs-5 lh-1 my-1">@shift.Icon</div>
+                                <div class="small-text fw-bold text-uppercase opacity-75">@shift.Label</div>
                             </div>
                         }
                     </div>
                 </section>
 
-                @* ➕ БЛОК 3: ФОРМА ДОБАВЛЕНИЯ СВОЕЙ ЗАДАЧИ *@
-                <section class="card bg-black border-secondary p-3 mb-4 shadow">
-                    <h5 class="text-success mb-3">➕ Добавить новую задачу</h5>
-                    <div class="row g-2 align-items-center">
-                        <div class="col-md-4">
-                            <input type="text" class="form-control bg-dark text-white border-secondary"
-                                   placeholder="Название задачи..." @bind="newTaskTitle" />
-                        </div>
-                        <div class="col-md-2">
-                            <input type="number" class="form-control bg-dark text-white border-secondary"
-                                   placeholder="Gold..." @bind="newTaskReward" />
-                        </div>
-                        <div class="col-md-2">
-                            <input type="number" class="form-control bg-dark text-white border-secondary"
-                                   placeholder="Длительность (мин)..." @bind="newTaskDuration" />
-                        </div>
-                        <div class="col-md-2">
-                            <select class="form-select bg-dark text-white border-secondary" @bind="newTaskType">
-                                <option value="@QuestType.WorkShift">Работа</option>
-                                <option value="@QuestType.Study">Учеба</option>
-                                <option value="@QuestType.PetProject">Pet-проект</option>
-                                <option value="@QuestType.Daily">Привычка</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-success w-100 fw-bold" @onclick="AddNewTask">
-                                Добавить
-                            </button>
-                        </div>
-                    </div>
-                </section>
-
-                @* ⏰ БЛОК 4: СПИСОК ЗАДАЧ *@
+                @* ⏰ СПИСОК ЗАДАЧ НА СЕГОДНЯ *@
                 <section>
                     <h5 class="mb-3 text-white">⏰ Задачи на сегодня</h5>
                     <div class="list-group">
@@ -142,7 +133,6 @@
                                     <h5 class="mb-1">
                                         @if (quest.ScheduledTime.HasValue)
                                         {
-                                            @* Контрастная плашка времени *@
                                             <span class="badge bg-warning text-dark me-2 fs-6 fw-bold">
                                                 ⏱️ @quest.GetFormattedTimeRange()
                                             </span>
@@ -180,8 +170,46 @@
                     </div>
                 </section>
             }
+            else if (activeTab == "add-task")
+            {
+                @* ➕ ЭКРАН СОЗДАНИЯ ЗАДАЧИ *@
+                <section class="card bg-black border-success p-4 shadow">
+                    <h4 class="text-success mb-4">➕ Создание новой задачи</h4>
+
+                    <div class="mb-3">
+                        <label class="form-label">Название квеста:</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary"
+                               placeholder="Например: Прочесть 20 страниц C#..." @bind="newTaskTitle" />
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Награда (Gold):</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" @bind="newTaskReward" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Длительность (минуты):</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" @bind="newTaskDuration" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Категория:</label>
+                            <select class="form-select bg-dark text-white border-secondary" @bind="newTaskType">
+                                <option value="@QuestType.WorkShift">Работа</option>
+                                <option value="@QuestType.Study">Учеба</option>
+                                <option value="@QuestType.PetProject">Pet-проект</option>
+                                <option value="@QuestType.Daily">Привычка</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-success btn-lg fw-bold w-100 mt-2" @onclick="AddNewTask">
+                        💾 Сохранить и добавить в расписание
+                    </button>
+                </section>
+            }
             else if (activeTab == "money")
             {
+                @* МАГАЗИН *@
                 <section>
                     <h4 class="mb-3">💳 Финансы и Магазин наград</h4>
                     <div class="row">
@@ -209,16 +237,46 @@
     </div>
 </div>
 
+@* Стили для 7-колоночной сетки календаря *@
+<style>
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+    }
+
+    .calendar-card {
+        min-height: 62px;
+        font-size: 0.85rem;
+    }
+
+    .small-text {
+        font-size: 0.65rem;
+    }
+    /* Цветовые темы смен из макета */
+    .shift-day-off {
+        background-color: #ffffff;
+        color: #333333;
+    }
+
+    .shift-day-work {
+        background-color: #8b0000;
+        color: #ffffff;
+    }
+
+    .shift-night-work {
+        background-color: #555555;
+        color: #ffffff;
+    }
+</style>
+
 @code {
     private PlayerProfile player = new PlayerProfile();
     private int currentStreak = 5;
     private string activeTab = "work";
 
-    // Настройки времени сна и дороги (в часах)
-    private int sleepHours = 8;
     private int commuteHours = 2;
 
-    // Поля для формы создания новой задачи (@bind)
     private string newTaskTitle = "";
     private int newTaskReward = 300;
     private int newTaskDuration = 60;
@@ -226,9 +284,43 @@
 
     private CultureInfo ruCulture = new CultureInfo("ru-RU");
 
-    private List<DateTime> weekDays => Enumerable.Range(0, 7)
-        .Select(offset => DateTime.Today.AddDays(offset))
+    // Выбранный месяц в календаре
+    private DateTime currentMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+    // Точка отсчета 8-дневного цикла (2 день / 2 отдых / 2 ночь / 2 отдых)
+    private DateTime shiftAnchorDate = new DateTime(2026, 9, 1);
+
+    // Список всех дней текущего месяца
+    private List<DateTime> monthDays => Enumerable.Range(1, DateTime.DaysInMonth(currentMonth.Year, currentMonth.Month))
+        .Select(day => new DateTime(currentMonth.Year, currentMonth.Month, day))
         .ToList();
+
+    // Расчет смещения 1-го числа месяца для корректной сетки (Пн=0, Вт=1... Вс=6)
+    private int GetFirstDayOffset()
+    {
+        var firstDay = new DateTime(currentMonth.Year, currentMonth.Month, 1);
+        int dayOfWeek = (int)firstDay.DayOfWeek; // Воскресенье = 0
+        return dayOfWeek == 0 ? 6 : dayOfWeek - 1; // Преобразуем так, чтобы Понедельник был 0
+    }
+
+    // Листание месяцев назад / вперед
+    private void PrevMonth() => currentMonth = currentMonth.AddMonths(-1);
+    private void NextMonth() => currentMonth = currentMonth.AddMonths(1);
+
+    // Логика расчета смены по циклу 2/2/2/2
+    private (string Icon, string Label, string CssClass) GetShiftDetails(DateTime date)
+    {
+        int daysDiff = (date.Date - shiftAnchorDate.Date).Days;
+        int cycleIndex = (daysDiff % 8 + 8) % 8; // Корректная обработка отрицательных дат
+
+        return cycleIndex switch
+        {
+            0 or 1 => ("☀️", "ОСН", "shift-day-work"),    // Дневная смена (темно-красная)
+            2 or 3 => ("—", "—", "shift-day-off"),        // Отдых (белая)
+            4 or 5 => ("🌙", "ОСН", "shift-night-work"),  // Ночная смена (темно-серая)
+            _ => ("—", "—", "shift-day-off")              // Отдых (белая)
+        };
+    }
 
     private List<QuestItem> quests = new List<QuestItem>
     {
@@ -237,14 +329,15 @@
             RewardGold = 500,
             Type = QuestType.WorkShift,
             ScheduledTime = new TimeSpan(08, 00, 0),
-            DurationMinutes = 720 // 12 часов
+            DurationMinutes = 720,
+            IsCompleted = true
         },
         new QuestItem {
             Title = "Учеба: Задание от куратора",
             RewardGold = 400,
             Type = QuestType.Study,
             ScheduledTime = new TimeSpan(20, 30, 0),
-            DurationMinutes = 60 // 1 час
+            DurationMinutes = 60
         }
     };
 
@@ -256,23 +349,24 @@
         new RewardItem { Title = "Весь день играть в видеоигры", PriceGold = 800 }
     };
 
-    // --- МЕТОДЫ РАСЧЕТА БЮДЖЕТА ВРЕМЕНИ ---
-
-    // Считает общее количество часов, занятых квестами
     private double GetTotalTasksHours()
     {
         int totalMinutes = quests.Where(q => !q.IsSkipped).Sum(q => q.DurationMinutes);
         return Math.Round(totalMinutes / 60.0, 1);
     }
 
-    // Считает свободный остаток от 24 часов
+    private double GetCompletedTasksHours()
+    {
+        int completedMinutes = quests.Where(q => q.IsCompleted).Sum(q => q.DurationMinutes);
+        return Math.Round(completedMinutes / 60.0, 1);
+    }
+
     private double GetFreeHours()
     {
-        double usedHours = sleepHours + commuteHours + GetTotalTasksHours();
+        double usedHours = commuteHours + GetTotalTasksHours();
         return Math.Round(24.0 - usedHours, 1);
     }
 
-    // Добавление новой задачи из формы
     private void AddNewTask()
     {
         if (string.IsNullOrWhiteSpace(newTaskTitle)) return;
@@ -283,11 +377,11 @@
             RewardGold = newTaskReward,
             DurationMinutes = newTaskDuration,
             Type = newTaskType,
-            ScheduledTime = new TimeSpan(21, 30, 0) // Ставим по умолчанию вечернее время
+            ScheduledTime = new TimeSpan(21, 00, 0)
         });
 
-        // Сбрасываем поле ввода
         newTaskTitle = "";
+        activeTab = "work";
     }
 
     private void CompleteQuest(QuestItem quest)
