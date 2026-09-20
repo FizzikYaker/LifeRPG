@@ -1,0 +1,74 @@
+﻿@using LifeRPG.Models
+
+<section class="card bg-black border-success p-4 shadow">
+    <h4 class="text-success mb-4">➕ Создание новой задачи</h4>
+
+    <div class="mb-3">
+        <label class="form-label">Название квеста:</label>
+        <input type="text" class="form-control bg-dark text-white border-secondary"
+               placeholder="Например: Прочесть 20 страниц C#..." @bind="newTaskTitle" />
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label class="form-label">Дата назначения:</label>
+            <input type="date" class="form-control bg-dark text-white border-secondary"
+                   @bind="newTaskDate" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Награда (Gold):</label>
+            <input type="number" class="form-control bg-dark text-white border-secondary" @bind="newTaskReward" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Длительность (минуты):</label>
+            <input type="number" class="form-control bg-dark text-white border-secondary" @bind="newTaskDuration" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Категория:</label>
+            <select class="form-select bg-dark text-white border-secondary" @bind="newTaskType">
+                <option value="@QuestType.WorkShift">Работа</option>
+                <option value="@QuestType.Study">Учеба</option>
+                <option value="@QuestType.PetProject">Pet-проект</option>
+                <option value="@QuestType.Daily">Привычка</option>
+            </select>
+        </div>
+    </div>
+
+    <button class="btn btn-success btn-lg fw-bold w-100 mt-2" @onclick="SubmitTask">
+        💾 Сохранить и добавить в расписание
+    </button>
+</section>
+
+@code {
+    [Parameter] public DateTime InitialDate { get; set; } = DateTime.Today;
+    [Parameter] public EventCallback<QuestItem> OnTaskCreated { get; set; }
+
+    private string newTaskTitle = "";
+    private DateTime newTaskDate = DateTime.Today;
+    private int newTaskReward = 300;
+    private int newTaskDuration = 60;
+    private QuestType newTaskType = QuestType.PetProject;
+
+    protected override void OnParametersSet()
+    {
+        newTaskDate = InitialDate;
+    }
+
+    private async Task SubmitTask()
+    {
+        if (string.IsNullOrWhiteSpace(newTaskTitle)) return;
+
+        var quest = new QuestItem
+        {
+            Title = newTaskTitle,
+            RewardGold = newTaskReward,
+            DurationMinutes = newTaskDuration,
+            Type = newTaskType,
+            TargetDate = newTaskDate,
+            ScheduledTime = new TimeSpan(20, 00, 0)
+        };
+
+        await OnTaskCreated.InvokeAsync(quest);
+        newTaskTitle = "";
+    }
+}

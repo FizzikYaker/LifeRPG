@@ -1,0 +1,29 @@
+﻿@using LifeRPG.Models
+
+<section>
+    <h4 class="mb-3">💳 Финансы и Магазин наград</h4>
+    <div class="row">
+        @foreach (var reward in Rewards)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card bg-black text-white border-secondary h-100 text-center">
+                    <div class="card-body">
+                        <h5>🎁 @reward.Title</h5>
+                        <p class="text-warning fs-5 fw-bold">@reward.PriceGold gold</p>
+                        <button class="btn btn-warning w-100 fw-bold"
+                                disabled="@(Player.GoldBalance < reward.PriceGold)"
+                                @onclick="() => OnBuyReward.InvokeAsync(reward)">
+                            Купить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter] public PlayerProfile Player { get; set; } = new();
+    [Parameter] public List<RewardItem> Rewards { get; set; } = new();
+    [Parameter] public EventCallback<RewardItem> OnBuyReward { get; set; }
+}

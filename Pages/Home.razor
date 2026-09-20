@@ -1,38 +1,17 @@
 ﻿@page "/"
 @using LifeRPG.Models
-@using System.Globalization
+@using LifeRPG.Components
 
 <PageTitle>Life RPG — Главный экран</PageTitle>
 
 <div class="d-flex flex-column vh-100 bg-dark text-white overflow-hidden">
 
-    @* ==================== 1. ЗАКРЕПЛЕННАЯ ШАПКА ==================== *@
-    <header class="d-flex justify-content-between align-items-center p-3 bg-black border-bottom border-secondary shadow-sm flex-shrink-0 sticky-top z-3">
-        <div class="fs-5 fw-bold">
-            🔥 Стрик: <span class="text-danger">@currentStreak дней</span>
-        </div>
+    @* 1. Шапка профиля *@
+    <HeaderProfile Player="player" Streak="currentStreak" />
 
-        <div class="fs-4 fw-bold">
-            💰 Золото: <span class="text-warning">@player.GoldBalance gold</span>
-        </div>
-
-        <div class="d-flex align-items-center gap-2">
-            <span class="fs-5 fw-bold me-2">Уровень @player.Level</span>
-            <div class="progress rounded-pill bg-secondary" style="width: 180px; height: 22px;">
-                @{
-                    var progressPercent = (player.CurrentXP * 100) / player.RequiredXP;
-                }
-                <div class="progress-bar bg-success rounded-pill fw-bold text-dark" style="width: @(progressPercent)%">
-                    @(progressPercent)%
-                </div>
-            </div>
-        </div>
-    </header>
-
-    @* Основная область: Боковое меню + Экран *@
     <div class="d-flex flex-grow-1 overflow-hidden">
 
-        @* ==================== 2. БОКОВОЕ МЕНЮ ==================== *@
+        @* 2. Боковое меню *@
         <nav class="p-3 bg-black border-end border-secondary flex-shrink-0" style="width: 220px;">
             <ul class="nav nav-pills flex-column gap-2">
                 <li class="nav-item">
@@ -56,271 +35,53 @@
             </ul>
         </nav>
 
-        @* ==================== 3. ОСНОВНОЙ ЭКРАН ==================== *@
+        @* 3. Основной экран *@
         <main class="flex-grow-1 p-4 overflow-auto">
 
             @if (activeTab == "work")
             {
-                @* 📊 ТАЙМ-МЕНЕДЖМЕНТ (БЮДЖЕТ 24 ЧАСА) *@
-                <section class="card bg-black border-primary text-white mb-4 p-3 shadow">
-                    <h5 class="card-title text-info mb-3">⏱️ Суточный бюджет времени (24 часа)</h5>
-                    <div class="row text-center">
-                        <div class="col-md-4">
-                            <span class="d-block text-light opacity-75">✅ Выполнено задач</span>
-                            <strong class="fs-4 text-success">@GetCompletedTasksHours() / @GetTotalTasksHours() ч</strong>
-                        </div>
-                        <div class="col-md-4">
-                            <span class="d-block text-light opacity-75">🚗 Дорога</span>
-                            <strong class="fs-4 text-white">@commuteHours ч</strong>
-                        </div>
-                        <div class="col-md-4">
-                            <span class="d-block text-light opacity-75">🎉 Свободный остаток</span>
-                            <strong class="fs-4 @(GetFreeHours() < 0 ? "text-danger" : "text-warning")">
-                                @GetFreeHours() ч
-                            </strong>
-                        </div>
-                    </div>
-                </section>
+                <TimeBudgetCard SelectedDate="selectedDate"
+                                CompletedHours="GetCompletedTasksHours(selectedDate)"
+                                TotalHours="GetTotalTasksHours(selectedDate)"
+                                CommuteHours="commuteHours"
+                                FreeHours="GetFreeHours(selectedDate)" />
 
-                @* 📅 ИНТЕРАКТИВНЫЙ КАЛЕНДАРЬ СМЕН В СТИЛЕ СКРИНШОТА *@
-                <section class="card bg-light text-dark mb-4 p-3 shadow border-0 rounded-4" style="max-width: 520px; margin: 0 auto;">
+                <ShiftCalendar CurrentMonth="currentMonth"
+                               SelectedDate="selectedDate"
+                               Quests="quests"
+                               OnDateSelected="SelectDate"
+                               OnPrevMonth="PrevMonth"
+                               OnNextMonth="NextMonth" />
 
-                    @* Шапка календаря: Кнопки < > и название месяца *@
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <button class="btn btn-outline-danger btn-sm fw-bold rounded-3 px-3 fs-5" @onclick="PrevMonth">&lt;</button>
-                        <h4 class="fw-bold m-0 text-danger text-capitalize">
-                            @currentMonth.ToString("MMMM yyyy", ruCulture)
-                        </h4>
-                        <button class="btn btn-outline-danger btn-sm fw-bold rounded-3 px-3 fs-5" @onclick="NextMonth">&gt;</button>
-                    </div>
-
-                    @* Дни недели *@
-                    <div class="calendar-grid mb-2 text-center text-muted fw-bold">
-                        <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
-                    </div>
-
-                    @* Сетка дней месяца *@
-                    <div class="calendar-grid">
-                        @* Пустые ячейки-отступы перед 1-м числом месяца *@
-                        @for (int i = 0; i < GetFirstDayOffset(); i++)
-                        {
-                            <div></div>
-                        }
-
-                        @* Дни текущего месяца *@
-                        @foreach (var day in monthDays)
-                        {
-                            var shift = GetShiftDetails(day);
-                            var isToday = day.Date == DateTime.Today;
-
-                            <div class="calendar-card rounded-3 p-1 text-center d-flex flex-column justify-content-between @shift.CssClass @(isToday ? "border border-3 border-warning shadow" : "")">
-                                <div class="fw-bold fs-6">@day.Day</div>
-                                <div class="fs-5 lh-1 my-1">@shift.Icon</div>
-                                <div class="small-text fw-bold text-uppercase opacity-75">@shift.Label</div>
-                            </div>
-                        }
-                    </div>
-                </section>
-
-                @* ⏰ СПИСОК ЗАДАЧ НА СЕГОДНЯ *@
-                <section>
-                    <h5 class="mb-3 text-white">⏰ Задачи на сегодня</h5>
-                    <div class="list-group">
-                        @foreach (var quest in quests)
-                        {
-                            <div class="list-group-item bg-black text-white border-secondary d-flex justify-content-between align-items-center mb-2 rounded @(quest.IsCompleted ? "opacity-50" : "")">
-                                <div>
-                                    <h5 class="mb-1">
-                                        @if (quest.ScheduledTime.HasValue)
-                                        {
-                                            <span class="badge bg-warning text-dark me-2 fs-6 fw-bold">
-                                                ⏱️ @quest.GetFormattedTimeRange()
-                                            </span>
-                                        }
-                                        <span class="text-white">@quest.Title</span>
-                                    </h5>
-                                    <small class="text-info fw-bold">+@quest.GetCalculatedReward() gold | Длительность: @(quest.DurationMinutes / 60) ч @(quest.DurationMinutes % 60) мин</small>
-                                </div>
-
-                                <div>
-                                    @if (quest.IsCompleted)
-                                    {
-                                        <span class="badge bg-success fs-6">Выполнено 🎉</span>
-                                    }
-                                    else if (quest.IsSkipped)
-                                    {
-                                        <span class="badge bg-secondary fs-6">Задач нет 🛌</span>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn btn-sm btn-primary me-2 fw-bold" @onclick="() => CompleteQuest(quest)">
-                                            Выполнить
-                                        </button>
-
-                                        @if (quest.Type == QuestType.Study)
-                                        {
-                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => SkipQuest(quest)">
-                                                Сегодня учебы нет
-                                            </button>
-                                        }
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </section>
+                <TaskList SelectedDate="selectedDate"
+                          Quests="quests"
+                          OnCompleteQuest="CompleteQuest"
+                          OnSkipQuest="SkipQuest"
+                          OnAddTaskClicked='() => activeTab = "add-task"' />
             }
             else if (activeTab == "add-task")
             {
-                @* ➕ ЭКРАН СОЗДАНИЯ ЗАДАЧИ *@
-                <section class="card bg-black border-success p-4 shadow">
-                    <h4 class="text-success mb-4">➕ Создание новой задачи</h4>
-
-                    <div class="mb-3">
-                        <label class="form-label">Название квеста:</label>
-                        <input type="text" class="form-control bg-dark text-white border-secondary"
-                               placeholder="Например: Прочесть 20 страниц C#..." @bind="newTaskTitle" />
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Награда (Gold):</label>
-                            <input type="number" class="form-control bg-dark text-white border-secondary" @bind="newTaskReward" />
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Длительность (минуты):</label>
-                            <input type="number" class="form-control bg-dark text-white border-secondary" @bind="newTaskDuration" />
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Категория:</label>
-                            <select class="form-select bg-dark text-white border-secondary" @bind="newTaskType">
-                                <option value="@QuestType.WorkShift">Работа</option>
-                                <option value="@QuestType.Study">Учеба</option>
-                                <option value="@QuestType.PetProject">Pet-проект</option>
-                                <option value="@QuestType.Daily">Привычка</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <button class="btn btn-success btn-lg fw-bold w-100 mt-2" @onclick="AddNewTask">
-                        💾 Сохранить и добавить в расписание
-                    </button>
-                </section>
+                <AddTaskForm InitialDate="selectedDate"
+                             OnTaskCreated="HandleTaskCreated" />
             }
             else if (activeTab == "money")
             {
-                @* МАГАЗИН *@
-                <section>
-                    <h4 class="mb-3">💳 Финансы и Магазин наград</h4>
-                    <div class="row">
-                        @foreach (var reward in rewards)
-                        {
-                            <div class="col-md-4 mb-3">
-                                <div class="card bg-black text-white border-secondary h-100 text-center">
-                                    <div class="card-body">
-                                        <h5>🎁 @reward.Title</h5>
-                                        <p class="text-warning fs-5 fw-bold">@reward.PriceGold gold</p>
-                                        <button class="btn btn-warning w-100 fw-bold"
-                                                disabled="@(player.GoldBalance < reward.PriceGold)"
-                                                @onclick="() => BuyReward(reward)">
-                                            Купить
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </section>
+                <RewardShop Player="player"
+                            Rewards="rewards"
+                            OnBuyReward="BuyReward" />
             }
 
         </main>
     </div>
 </div>
 
-@* Стили для 7-колоночной сетки календаря *@
-<style>
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 6px;
-    }
-
-    .calendar-card {
-        min-height: 62px;
-        font-size: 0.85rem;
-    }
-
-    .small-text {
-        font-size: 0.65rem;
-    }
-    /* Цветовые темы смен из макета */
-    .shift-day-off {
-        background-color: #ffffff;
-        color: #333333;
-    }
-
-    .shift-day-work {
-        background-color: #8b0000;
-        color: #ffffff;
-    }
-
-    .shift-night-work {
-        background-color: #555555;
-        color: #ffffff;
-    }
-</style>
-
 @code {
     private PlayerProfile player = new PlayerProfile();
     private int currentStreak = 5;
     private string activeTab = "work";
-
     private int commuteHours = 2;
-
-    private string newTaskTitle = "";
-    private int newTaskReward = 300;
-    private int newTaskDuration = 60;
-    private QuestType newTaskType = QuestType.PetProject;
-
-    private CultureInfo ruCulture = new CultureInfo("ru-RU");
-
-    // Выбранный месяц в календаре
+    private DateTime selectedDate = DateTime.Today;
     private DateTime currentMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-
-    // Точка отсчета 8-дневного цикла (2 день / 2 отдых / 2 ночь / 2 отдых)
-    private DateTime shiftAnchorDate = new DateTime(2026, 9, 1);
-
-    // Список всех дней текущего месяца
-    private List<DateTime> monthDays => Enumerable.Range(1, DateTime.DaysInMonth(currentMonth.Year, currentMonth.Month))
-        .Select(day => new DateTime(currentMonth.Year, currentMonth.Month, day))
-        .ToList();
-
-    // Расчет смещения 1-го числа месяца для корректной сетки (Пн=0, Вт=1... Вс=6)
-    private int GetFirstDayOffset()
-    {
-        var firstDay = new DateTime(currentMonth.Year, currentMonth.Month, 1);
-        int dayOfWeek = (int)firstDay.DayOfWeek; // Воскресенье = 0
-        return dayOfWeek == 0 ? 6 : dayOfWeek - 1; // Преобразуем так, чтобы Понедельник был 0
-    }
-
-    // Листание месяцев назад / вперед
-    private void PrevMonth() => currentMonth = currentMonth.AddMonths(-1);
-    private void NextMonth() => currentMonth = currentMonth.AddMonths(1);
-
-    // Логика расчета смены по циклу 2/2/2/2
-    private (string Icon, string Label, string CssClass) GetShiftDetails(DateTime date)
-    {
-        int daysDiff = (date.Date - shiftAnchorDate.Date).Days;
-        int cycleIndex = (daysDiff % 8 + 8) % 8; // Корректная обработка отрицательных дат
-
-        return cycleIndex switch
-        {
-            0 or 1 => ("☀️", "ОСН", "shift-day-work"),    // Дневная смена (темно-красная)
-            2 or 3 => ("—", "—", "shift-day-off"),        // Отдых (белая)
-            4 or 5 => ("🌙", "ОСН", "shift-night-work"),  // Ночная смена (темно-серая)
-            _ => ("—", "—", "shift-day-off")              // Отдых (белая)
-        };
-    }
 
     private List<QuestItem> quests = new List<QuestItem>
     {
@@ -330,6 +91,7 @@
             Type = QuestType.WorkShift,
             ScheduledTime = new TimeSpan(08, 00, 0),
             DurationMinutes = 720,
+            TargetDate = DateTime.Today,
             IsCompleted = true
         },
         new QuestItem {
@@ -337,7 +99,16 @@
             RewardGold = 400,
             Type = QuestType.Study,
             ScheduledTime = new TimeSpan(20, 30, 0),
-            DurationMinutes = 60
+            DurationMinutes = 60,
+            TargetDate = DateTime.Today
+        },
+        new QuestItem {
+            Title = "Разработка Life RPG на C#",
+            RewardGold = 300,
+            Type = QuestType.PetProject,
+            ScheduledTime = new TimeSpan(18, 00, 0),
+            DurationMinutes = 120,
+            TargetDate = DateTime.Today.AddDays(1)
         }
     };
 
@@ -349,38 +120,24 @@
         new RewardItem { Title = "Весь день играть в видеоигры", PriceGold = 800 }
     };
 
-    private double GetTotalTasksHours()
+    private void PrevMonth() => currentMonth = currentMonth.AddMonths(-1);
+    private void NextMonth() => currentMonth = currentMonth.AddMonths(1);
+
+    private void SelectDate(DateTime date) => selectedDate = date;
+
+    private double GetTotalTasksHours(DateTime date) =>
+        Math.Round(quests.Where(q => q.TargetDate.Date == date.Date && !q.IsSkipped).Sum(q => q.DurationMinutes) / 60.0, 1);
+
+    private double GetCompletedTasksHours(DateTime date) =>
+        Math.Round(quests.Where(q => q.TargetDate.Date == date.Date && q.IsCompleted).Sum(q => q.DurationMinutes) / 60.0, 1);
+
+    private double GetFreeHours(DateTime date) =>
+        Math.Round(24.0 - (commuteHours + GetTotalTasksHours(date)), 1);
+
+    private void HandleTaskCreated(QuestItem newQuest)
     {
-        int totalMinutes = quests.Where(q => !q.IsSkipped).Sum(q => q.DurationMinutes);
-        return Math.Round(totalMinutes / 60.0, 1);
-    }
-
-    private double GetCompletedTasksHours()
-    {
-        int completedMinutes = quests.Where(q => q.IsCompleted).Sum(q => q.DurationMinutes);
-        return Math.Round(completedMinutes / 60.0, 1);
-    }
-
-    private double GetFreeHours()
-    {
-        double usedHours = commuteHours + GetTotalTasksHours();
-        return Math.Round(24.0 - usedHours, 1);
-    }
-
-    private void AddNewTask()
-    {
-        if (string.IsNullOrWhiteSpace(newTaskTitle)) return;
-
-        quests.Add(new QuestItem
-        {
-            Title = newTaskTitle,
-            RewardGold = newTaskReward,
-            DurationMinutes = newTaskDuration,
-            Type = newTaskType,
-            ScheduledTime = new TimeSpan(21, 00, 0)
-        });
-
-        newTaskTitle = "";
+        quests.Add(newQuest);
+        selectedDate = newQuest.TargetDate;
         activeTab = "work";
     }
 
@@ -390,13 +147,7 @@
         player.AddGoldAndXP(quest.GetCalculatedReward());
     }
 
-    private void SkipQuest(QuestItem quest)
-    {
-        quest.SkipTask();
-    }
+    private void SkipQuest(QuestItem quest) => quest.SkipTask();
 
-    private void BuyReward(RewardItem reward)
-    {
-        player.TrySpendGold(reward.PriceGold);
-    }
+    private void BuyReward(RewardItem reward) => player.TrySpendGold(reward.PriceGold);
 }

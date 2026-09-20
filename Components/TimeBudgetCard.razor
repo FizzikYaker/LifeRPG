@@ -1,0 +1,34 @@
+﻿@using System.Globalization
+
+<section class="card bg-black border-primary text-white mb-4 p-3 shadow">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="text-info m-0">⏱️ Бюджет времени на @SelectedDate.ToString("dd MMMM (ddd)", RuCulture)</h5>
+        <span class="badge bg-primary fs-6">Выбран день</span>
+    </div>
+    <div class="row text-center">
+        <div class="col-md-4">
+            <span class="d-block text-light opacity-75">✅ Выполнено задач</span>
+            <strong class="fs-4 text-success">@CompletedHours / @TotalHours ч</strong>
+        </div>
+        <div class="col-md-4">
+            <span class="d-block text-light opacity-75">🚗 Дорога</span>
+            <strong class="fs-4 text-white">@CommuteHours ч</strong>
+        </div>
+        <div class="col-md-4">
+            <span class="d-block text-light opacity-75">🎉 Свободный остаток</span>
+            <strong class="fs-4 @(FreeHours < 0 ? "text-danger" : "text-warning")">
+                @FreeHours ч
+            </strong>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter] public DateTime SelectedDate { get; set; }
+    [Parameter] public double CompletedHours { get; set; }
+    [Parameter] public double TotalHours { get; set; }
+    [Parameter] public int CommuteHours { get; set; }
+    [Parameter] public double FreeHours { get; set; }
+
+    private CultureInfo RuCulture = new CultureInfo("ru-RU");
+}

@@ -33,6 +33,30 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/zzzzzf/source/repos/LifeRPG/LifeRPG/Components/AddTaskForm.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBZGRUYXNrRm9ybS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/zzzzzf/source/repos/LifeRPG/LifeRPG/Components/HeaderProfile.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xIZWFkZXJQcm9maWxlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/zzzzzf/source/repos/LifeRPG/LifeRPG/Components/RewardShop.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xSZXdhcmRTaG9wLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/zzzzzf/source/repos/LifeRPG/LifeRPG/Components/ShiftCalendar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGlmdENhbGVuZGFyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/zzzzzf/source/repos/LifeRPG/LifeRPG/Components/TaskList.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xUYXNrTGlzdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/zzzzzf/source/repos/LifeRPG/LifeRPG/Components/TimeBudgetCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xUaW1lQnVkZ2V0Q2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/zzzzzf/source/repos/LifeRPG/LifeRPG/Pages/Counter.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

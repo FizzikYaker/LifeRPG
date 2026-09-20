@@ -1,0 +1,113 @@
+﻿@using LifeRPG.Models
+@using System.Globalization
+
+<section class="card bg-black border-secondary text-white mb-4 p-3 shadow rounded-3 w-100">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-outline-light btn-sm fw-bold px-3 fs-5" @onclick="OnPrevMonth">&lt;</button>
+        <h3 class="fw-bold m-0 text-warning text-capitalize">
+            📅 @CurrentMonth.ToString("MMMM yyyy", RuCulture)
+        </h3>
+        <button class="btn btn-outline-light btn-sm fw-bold px-3 fs-5" @onclick="OnNextMonth">&gt;</button>
+    </div>
+
+    <div class="calendar-desktop-grid mb-2 text-center text-info fw-bold fs-6">
+        <div>Понедельник</div><div>Вторник</div><div>Среда</div><div>Четверг</div><div>Пятница</div><div>Суббота</div><div>Воскресенье</div>
+    </div>
+
+    <div class="calendar-desktop-grid">
+        @for (int i = 0; i < GetFirstDayOffset(); i++)
+        {
+            <div class="calendar-day-cell bg-dark opacity-25 rounded-2"></div>
+        }
+
+        @foreach (var day in MonthDays)
+        {
+            var shift = GetShiftDetails(day);
+            var isToday = day.Date == DateTime.Today;
+            var isSelected = day.Date == SelectedDate.Date;
+            var dayTasks = Quests.Where(q => q.TargetDate.Date == day.Date).ToList();
+
+            <div class="calendar-day-cell p-2 rounded-2 d-flex flex-column justify-content-between border @(isSelected ? "border-primary border-3 bg-dark" : isToday ? "border-warning border-2 bg-black" : "border-secondary bg-black")"
+                 style="cursor: pointer;"
+                 @onclick="() => OnDateSelected.InvokeAsync(day)">
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-bold fs-5 @(isToday ? "text-warning" : "text-white")">@day.Day</span>
+                    <span class="badge @shift.BadgeClass">@shift.Icon @shift.Label</span>
+                </div>
+
+                <div class="my-1 overflow-hidden" style="max-height: 55px;">
+                    @foreach (var task in dayTasks.Take(2))
+                    {
+                        <div class="text-truncate small p-1 mb-1 rounded @(task.IsCompleted ? "bg-success text-white opacity-75" : "bg-secondary text-white")" style="font-size: 0.75rem;">
+                            @(task.IsCompleted ? "✓ " : "")@task.Title
+                        </div>
+                    }
+                    @if (dayTasks.Count > 2)
+                    {
+                        <small class="text-info fw-bold" style="font-size: 0.7rem;">+ еще @(dayTasks.Count - 2) задач...</small>
+                    }
+                </div>
+
+                <div class="text-end">
+                    <small class="text-muted" style="font-size: 0.65rem;">Клик для просмотра</small>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<style>
+    .calendar-desktop-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+    }
+
+    .calendar-day-cell {
+        min-height: 110px;
+        transition: all 0.2s ease-in-out;
+    }
+
+        .calendar-day-cell:hover {
+            border-color: #0d6efd !important;
+            transform: translateY(-2px);
+        }
+</style>
+
+@code {
+    [Parameter] public DateTime CurrentMonth { get; set; }
+    [Parameter] public DateTime SelectedDate { get; set; }
+    [Parameter] public List<QuestItem> Quests { get; set; } = new();
+    [Parameter] public EventCallback<DateTime> OnDateSelected { get; set; }
+    [Parameter] public EventCallback OnPrevMonth { get; set; }
+    [Parameter] public EventCallback OnNextMonth { get; set; }
+
+    private CultureInfo RuCulture = new CultureInfo("ru-RU");
+    private DateTime ShiftAnchorDate = new DateTime(2026, 9, 1);
+
+    private List<DateTime> MonthDays => Enumerable.Range(1, DateTime.DaysInMonth(CurrentMonth.Year, CurrentMonth.Month))
+        .Select(day => new DateTime(CurrentMonth.Year, CurrentMonth.Month, day))
+        .ToList();
+
+    private int GetFirstDayOffset()
+    {
+        var firstDay = new DateTime(CurrentMonth.Year, CurrentMonth.Month, 1);
+        int dayOfWeek = (int)firstDay.DayOfWeek;
+        return dayOfWeek == 0 ? 6 : dayOfWeek - 1;
+    }
+
+    private (string Icon, string Label, string BadgeClass) GetShiftDetails(DateTime date)
+    {
+        int daysDiff = (date.Date - ShiftAnchorDate.Date).Days;
+        int cycleIndex = (daysDiff % 8 + 8) % 8;
+
+        return cycleIndex switch
+        {
+            0 or 1 => ("☀️", "ОСН", "bg-danger text-white"),
+            2 or 3 => ("—", "ВЫХ", "bg-secondary text-white"),
+            4 or 5 => ("🌙", "НОЧЬ", "bg-dark border border-secondary text-white"),
+            _ => ("—", "ВЫХ", "bg-secondary text-white")
+        };
+    }
+}
