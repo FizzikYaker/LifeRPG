@@ -1,27 +1,57 @@
 ﻿@using System.Globalization
 
-<section class="card bg-black border-primary text-white mb-4 p-3 shadow">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h5 class="text-info m-0">⏱️ Бюджет времени на @SelectedDate.ToString("dd MMMM (ddd)", RuCulture)</h5>
-        <span class="badge bg-primary fs-6">Выбран день</span>
+<section class="card border-0 text-white mb-4 p-3 shadow-lg rounded-4 time-card-rpg">
+    <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+        <h5 class="text-info m-0 fw-bold d-flex align-items-center gap-2">
+            ⏱️ Бюджет времени на @SelectedDate.ToString("dd MMMM (ddd)", RuCulture)
+        </h5>
+        <span class="badge badge-selected-day fs-6">Выбран день</span>
     </div>
-    <div class="row text-center">
+    <div class="row text-center g-3">
         <div class="col-md-4">
-            <span class="d-block text-light opacity-75">✅ Выполнено задач</span>
-            <strong class="fs-4 text-success">@CompletedHours / @TotalHours ч</strong>
+            <div class="p-3 rounded-3 stat-box">
+                <span class="d-block text-slate-400 mb-1">✅ Выполнено задач</span>
+                <strong class="fs-4 text-success font-monospace">@CompletedHours / @TotalHours ч</strong>
+            </div>
         </div>
         <div class="col-md-4">
-            <span class="d-block text-light opacity-75">🚗 Дорога</span>
-            <strong class="fs-4 text-white">@CommuteHours ч</strong>
+            <div class="p-3 rounded-3 stat-box">
+                <span class="d-block text-slate-400 mb-1">🚗 Дорога</span>
+                <strong class="fs-4 text-white font-monospace">@CommuteHours ч</strong>
+            </div>
         </div>
         <div class="col-md-4">
-            <span class="d-block text-light opacity-75">🎉 Свободный остаток</span>
-            <strong class="fs-4 @(FreeHours < 0 ? "text-danger" : "text-warning")">
-                @FreeHours ч
-            </strong>
+            <div class="p-3 rounded-3 stat-box">
+                <span class="d-block text-slate-400 mb-1">🎉 Свободный остаток</span>
+                <strong class="fs-4 font-monospace @(FreeHours < 0 ? "text-danger" : "text-warning")">
+                    @FreeHours ч
+                </strong>
+            </div>
         </div>
     </div>
 </section>
+
+<style>
+    .time-card-rpg {
+        background: #0b1329;
+        border: 1px solid #1e293b !important;
+    }
+
+    .badge-selected-day {
+        background: rgba(56, 189, 248, 0.15);
+        color: #38bdf8;
+        border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .stat-box {
+        background: #111c35;
+        border: 1px solid #1e293b;
+    }
+
+    .text-slate-400 {
+        color: #94a3b8;
+    }
+</style>
 
 @code {
     [Parameter] public DateTime SelectedDate { get; set; }

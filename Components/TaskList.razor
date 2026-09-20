@@ -1,13 +1,13 @@
 ﻿@using LifeRPG.Models
 @using System.Globalization
 
-<section>
+<section class="card border-0 text-white mb-4 p-4 shadow-lg rounded-4 task-list-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="text-white m-0">
+        <h4 class="text-white m-0 fw-bold">
             📋 Задачи на @SelectedDate.ToString("dd MMMM (ddd)", RuCulture)
         </h4>
-        <button class="btn btn-sm btn-success fw-bold" @onclick="OnAddTaskClicked">
-            + Добавить задачу на этот день
+        <button class="btn btn-sm btn-outline-success fw-bold px-3 py-2 rounded-3 add-task-btn" @onclick="OnAddTaskClicked">
+            + Добавить задачу
         </button>
     </div>
 
@@ -17,48 +17,52 @@
 
     @if (!selectedDayTasks.Any())
     {
-        <div class="alert alert-dark border-secondary text-center text-muted">
-            На этот день задач пока нет. Вы можете накидать их через кнопку выше!
+        <div class="p-4 rounded-3 text-center text-slate-400 empty-tasks-box">
+            На этот день задач пока нет. Нажмите кнопку выше, чтобы запланировать квест!
         </div>
     }
     else
     {
-        <div class="list-group">
+        <div class="d-flex flex-column gap-2">
             @foreach (var quest in selectedDayTasks)
             {
-                <div class="list-group-item bg-black text-white border-secondary d-flex justify-content-between align-items-center mb-2 rounded @(quest.IsCompleted ? "opacity-50" : "")">
+                <div class="task-item p-3 rounded-3 d-flex justify-content-between align-items-center @(quest.IsCompleted ? "task-completed-item" : "")">
                     <div>
-                        <h5 class="mb-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
                             @if (quest.ScheduledTime.HasValue)
                             {
-                                <span class="badge bg-warning text-dark me-2 fs-6 fw-bold">
+                                <span class="badge time-badge">
                                     ⏱️ @quest.GetFormattedTimeRange()
                                 </span>
                             }
-                            <span class="text-white">@quest.Title</span>
-                        </h5>
-                        <small class="text-info fw-bold">+@quest.GetCalculatedReward() gold | Длительность: @(quest.DurationMinutes / 60) ч @(quest.DurationMinutes % 60) мин</small>
+                            <h5 class="m-0 fw-bold @(quest.IsCompleted ? "text-decoration-line-through text-muted" : "text-white")">
+                                @quest.Title
+                            </h5>
+                        </div>
+                        <small class="text-warning fw-bold">+@quest.GetCalculatedReward() gold</small>
+                        <span class="text-slate-500 mx-1">|</span>
+                        <small class="text-slate-400">Длительность: @(quest.DurationMinutes / 60) ч @(quest.DurationMinutes % 60) мин</small>
                     </div>
 
-                    <div>
+                    <div class="d-flex align-items-center gap-2">
                         @if (quest.IsCompleted)
                         {
-                            <span class="badge bg-success fs-6">Выполнено 🎉</span>
+                            <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill fw-bold">Выполнено 🎉</span>
                         }
                         else if (quest.IsSkipped)
                         {
-                            <span class="badge bg-secondary fs-6">Задач нет 🛌</span>
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary px-3 py-2 rounded-pill fw-bold">Отменено 🛌</span>
                         }
                         else
                         {
-                            <button class="btn btn-sm btn-primary me-2 fw-bold" @onclick="() => OnCompleteQuest.InvokeAsync(quest)">
+                            <button class="btn btn-primary btn-sm px-3 fw-bold action-btn" @onclick="() => OnCompleteQuest.InvokeAsync(quest)">
                                 Выполнить
                             </button>
 
                             @if (quest.Type == QuestType.Study)
                             {
-                                <button class="btn btn-sm btn-outline-secondary" @onclick="() => OnSkipQuest.InvokeAsync(quest)">
-                                    Сегодня учебы нет
+                                <button class="btn btn-outline-secondary btn-sm px-3" @onclick="() => OnSkipQuest.InvokeAsync(quest)">
+                                    Учебы нет
                                 </button>
                             }
                         }
@@ -68,6 +72,58 @@
         </div>
     }
 </section>
+
+<style>
+    .task-list-card {
+        background: #0b1329;
+        border: 1px solid #1e293b !important;
+    }
+
+    .task-item {
+        background: #111c35;
+        border: 1px solid #1e293b;
+        transition: all 0.2s ease;
+    }
+
+        .task-item:hover {
+            border-color: #38bdf8;
+        }
+
+    .task-completed-item {
+        opacity: 0.6;
+        background: #0d1627;
+    }
+
+    .time-badge {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        font-weight: 600;
+    }
+
+    .add-task-btn {
+        border-color: #22c55e;
+        color: #22c55e;
+    }
+
+        .add-task-btn:hover {
+            background: #22c55e;
+            color: #000000;
+        }
+
+    .empty-tasks-box {
+        border: 1px dashed #1e293b;
+        background: #0e172a;
+    }
+
+    .text-slate-400 {
+        color: #94a3b8;
+    }
+
+    .text-slate-500 {
+        color: #64748b;
+    }
+</style>
 
 @code {
     [Parameter] public DateTime SelectedDate { get; set; }

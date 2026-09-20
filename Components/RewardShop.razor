@@ -1,26 +1,56 @@
 ﻿@using LifeRPG.Models
 
-<section>
-    <h4 class="mb-3">💳 Финансы и Магазин наград</h4>
-    <div class="row">
+<section class="card border-0 text-white p-4 shadow-lg rounded-4 shop-card-container">
+    <h4 class="mb-4 fw-bold text-warning d-flex align-items-center gap-2">
+        <span>🏪</span> Магазин наград
+    </h4>
+    <div class="row g-3">
         @foreach (var reward in Rewards)
         {
-            <div class="col-md-4 mb-3">
-                <div class="card bg-black text-white border-secondary h-100 text-center">
-                    <div class="card-body">
-                        <h5>🎁 @reward.Title</h5>
-                        <p class="text-warning fs-5 fw-bold">@reward.PriceGold gold</p>
-                        <button class="btn btn-warning w-100 fw-bold"
-                                disabled="@(Player.GoldBalance < reward.PriceGold)"
-                                @onclick="() => OnBuyReward.InvokeAsync(reward)">
-                            Купить
-                        </button>
+            <div class="col-md-4">
+                <div class="card p-3 text-center border-0 rounded-3 shop-item-card h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="fw-bold mb-2 text-white">🎁 @reward.Title</h5>
+                        <p class="text-warning fs-4 fw-bold m-0 font-monospace">@reward.PriceGold <small class="fs-6">GOLD</small></p>
                     </div>
+                    <button class="btn btn-warning w-100 fw-bold mt-3 py-2 buy-btn"
+                            disabled="@(Player.GoldBalance < reward.PriceGold)"
+                            @onclick="() => OnBuyReward.InvokeAsync(reward)">
+                        Купить
+                    </button>
                 </div>
             </div>
         }
     </div>
 </section>
+
+<style>
+    .shop-card-container {
+        background: #0b1329;
+        border: 1px solid #1e293b !important;
+    }
+
+    .shop-item-card {
+        background: #111c35;
+        border: 1px solid #1e293b !important;
+        transition: transform 0.2s ease;
+    }
+
+        .shop-item-card:hover {
+            transform: translateY(-3px);
+            border-color: #f59e0b !important;
+        }
+
+    .buy-btn {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        border: none;
+        color: #000000;
+    }
+
+        .buy-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        }
+</style>
 
 @code {
     [Parameter] public PlayerProfile Player { get; set; } = new();

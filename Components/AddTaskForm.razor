@@ -1,31 +1,32 @@
 ﻿@using LifeRPG.Models
 
-<section class="card bg-black border-success p-4 shadow">
-    <h4 class="text-success mb-4">➕ Создание новой задачи</h4>
+<section class="card border-0 text-white p-4 shadow-lg rounded-4 add-form-card">
+    <h4 class="text-success mb-4 fw-bold d-flex align-items-center gap-2">
+        <span>➕</span> Создание нового квеста
+    </h4>
 
     <div class="mb-3">
-        <label class="form-label">Название квеста:</label>
-        <input type="text" class="form-control bg-dark text-white border-secondary"
+        <label class="form-label text-slate-300 fw-bold">Название квеста:</label>
+        <input type="text" class="form-control rpg-input"
                placeholder="Например: Прочесть 20 страниц C#..." @bind="newTaskTitle" />
     </div>
 
-    <div class="row mb-3">
+    <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <label class="form-label">Дата назначения:</label>
-            <input type="date" class="form-control bg-dark text-white border-secondary"
-                   @bind="newTaskDate" />
+            <label class="form-label text-slate-300 fw-bold">Дата назначения:</label>
+            <input type="date" class="form-control rpg-input" @bind="newTaskDate" />
         </div>
         <div class="col-md-3">
-            <label class="form-label">Награда (Gold):</label>
-            <input type="number" class="form-control bg-dark text-white border-secondary" @bind="newTaskReward" />
+            <label class="form-label text-slate-300 fw-bold">Награда (Gold):</label>
+            <input type="number" class="form-control rpg-input" @bind="newTaskReward" />
         </div>
         <div class="col-md-3">
-            <label class="form-label">Длительность (минуты):</label>
-            <input type="number" class="form-control bg-dark text-white border-secondary" @bind="newTaskDuration" />
+            <label class="form-label text-slate-300 fw-bold">Длительность (мин):</label>
+            <input type="number" class="form-control rpg-input" @bind="newTaskDuration" />
         </div>
         <div class="col-md-3">
-            <label class="form-label">Категория:</label>
-            <select class="form-select bg-dark text-white border-secondary" @bind="newTaskType">
+            <label class="form-label text-slate-300 fw-bold">Категория:</label>
+            <select class="form-select rpg-input" @bind="newTaskType">
                 <option value="@QuestType.WorkShift">Работа</option>
                 <option value="@QuestType.Study">Учеба</option>
                 <option value="@QuestType.PetProject">Pet-проект</option>
@@ -34,10 +35,46 @@
         </div>
     </div>
 
-    <button class="btn btn-success btn-lg fw-bold w-100 mt-2" @onclick="SubmitTask">
+    <button class="btn btn-success btn-lg fw-bold w-100 py-3 rounded-3 submit-btn" @onclick="SubmitTask">
         💾 Сохранить и добавить в расписание
     </button>
 </section>
+
+<style>
+    .add-form-card {
+        background: #0b1329;
+        border: 1px solid #1e293b !important;
+    }
+
+    .rpg-input {
+        background: #111c35;
+        border: 1px solid #1e293b;
+        color: #ffffff;
+        padding: 10px 14px;
+        border-radius: 8px;
+    }
+
+        .rpg-input:focus {
+            background: #111c35;
+            border-color: #38bdf8;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #10b981, #059669);
+        border: none;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+        .submit-btn:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+        }
+
+    .text-slate-300 {
+        color: #cbd5e1;
+    }
+</style>
 
 @code {
     [Parameter] public DateTime InitialDate { get; set; } = DateTime.Today;
