@@ -1,17 +1,17 @@
 self.assetsManifest = {
-  "version": "khrwSb6F",
+  "version": "GBK7YwLh",
   "assets": [
     {
       "hash": "sha256-KWvKuiMUMrOn3PpZR1p1tcklpADmMReybtvneqkKPd8=",
       "url": "LifeRPG.styles.css"
     },
     {
-      "hash": "sha256-mZGdVYd2Y0iAFPWUUE4Wjsj94qInzEE/zgl4ZjbfcyI=",
-      "url": "_framework/LifeRPG.7sfefmqcf7.wasm"
+      "hash": "sha256-p28+ONG940VRkGqe8XCw8SWeHBdz/zlCX+UxPXd9wZE=",
+      "url": "_framework/LifeRPG.jl6h87fvjz.pdb"
     },
     {
-      "hash": "sha256-m4fU5W/9LB297SFM5bdDX/6eiIzrzJ3YLbwNEaG1wBg=",
-      "url": "_framework/LifeRPG.xtjgggeuh3.pdb"
+      "hash": "sha256-6ZkXZYYOEqe2QPaPD26oa0Pjg0/eqX5Udn4EBZFgwgM=",
+      "url": "_framework/LifeRPG.zhtbwbpx84.wasm"
     },
     {
       "hash": "sha256-wALoPycHyKqIhqjbbqqt/bdtcM7dmqCsbmpxnlPLGa8=",
@@ -810,12 +810,12 @@ self.assetsManifest = {
       "url": "_framework/blazor.webassembly.958z1vx7fr.js"
     },
     {
-      "hash": "sha256-xYr/HlMZGXgJvScnd/qGRDPSQW1K/B0XMpS+GD6y5EM=",
-      "url": "_framework/dotnet.js.map"
+      "hash": "sha256-QRhE11H5AH6ySIeICZCcBxSEUWxxWuV0Fu/icFZw1H0=",
+      "url": "_framework/dotnet.3ztk73k6j1.js"
     },
     {
-      "hash": "sha256-+tuVfb1bNPGUE5AsQPSrOa0lmHFU3KgJAGtFXCHHzaA=",
-      "url": "_framework/dotnet.mswwajceka.js"
+      "hash": "sha256-xYr/HlMZGXgJvScnd/qGRDPSQW1K/B0XMpS+GD6y5EM=",
+      "url": "_framework/dotnet.js.map"
     },
     {
       "hash": "sha256-i4MH1ttKidpkFY/9i4kRe+7ux5JQMZds+qXuSkJqeog=",
@@ -870,7 +870,7 @@ self.assetsManifest = {
       "url": "icon-512.png"
     },
     {
-      "hash": "sha256-0UNH5/CscNEXg3eHUgf8kNfobq3jONLCjfzEFR/dTrI=",
+      "hash": "sha256-3/Jln36SpQO1A+RVXd0ZAcB9VNPoEuZq+nBjMbmNvu0=",
       "url": "index.html"
     },
     {

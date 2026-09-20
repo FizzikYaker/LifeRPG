@@ -6,12 +6,10 @@
 
 <div class="d-flex flex-column vh-100 rpg-app-bg text-white overflow-hidden">
 
-    @* 1. Шапка профиля *@
     <HeaderProfile Player="player" Streak="currentStreak" />
 
     <div class="d-flex flex-grow-1 overflow-hidden">
 
-        @* 2. Наше стилизованное боковое меню *@
         <nav class="p-3 border-end flex-shrink-0 rpg-sidebar" style="width: 240px;">
             <ul class="nav nav-pills flex-column gap-2">
                 <li class="nav-item">
@@ -35,7 +33,6 @@
             </ul>
         </nav>
 
-        @* 3. Основной экран *@
         <main class="flex-grow-1 p-4 overflow-auto">
 
             @if (activeTab == "work")
@@ -44,7 +41,8 @@
                                 CompletedHours="GetCompletedTasksHours(selectedDate)"
                                 TotalHours="GetTotalTasksHours(selectedDate)"
                                 CommuteHours="commuteHours"
-                                FreeHours="GetFreeHours(selectedDate)" />
+                                FreeHours="GetFreeHours(selectedDate)"
+                                IsNightShift="IsNightShift(selectedDate)" />
 
                 <ShiftCalendar CurrentMonth="currentMonth"
                                SelectedDate="selectedDate"
@@ -128,6 +126,7 @@
     private int commuteHours = 2;
     private DateTime selectedDate = DateTime.Today;
     private DateTime currentMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private DateTime shiftAnchorDate = new DateTime(2026, 9, 1);
 
     private List<QuestItem> quests = new List<QuestItem>
     {
@@ -147,14 +146,6 @@
             ScheduledTime = new TimeSpan(20, 30, 0),
             DurationMinutes = 60,
             TargetDate = DateTime.Today
-        },
-        new QuestItem {
-            Title = "Разработка Life RPG на C#",
-            RewardGold = 300,
-            Type = QuestType.PetProject,
-            ScheduledTime = new TimeSpan(18, 00, 0),
-            DurationMinutes = 120,
-            TargetDate = DateTime.Today.AddDays(1)
         }
     };
 
@@ -168,8 +159,14 @@
 
     private void PrevMonth() => currentMonth = currentMonth.AddMonths(-1);
     private void NextMonth() => currentMonth = currentMonth.AddMonths(1);
-
     private void SelectDate(DateTime date) => selectedDate = date;
+
+    private bool IsNightShift(DateTime date)
+    {
+        int daysDiff = (date.Date - shiftAnchorDate.Date).Days;
+        int cycleIndex = (daysDiff % 8 + 8) % 8;
+        return cycleIndex == 4 || cycleIndex == 5; // Ночная смена
+    }
 
     private double GetTotalTasksHours(DateTime date) =>
         Math.Round(quests.Where(q => q.TargetDate.Date == date.Date && !q.IsSkipped).Sum(q => q.DurationMinutes) / 60.0, 1);
@@ -180,10 +177,30 @@
     private double GetFreeHours(DateTime date) =>
         Math.Round(24.0 - (commuteHours + GetTotalTasksHours(date)), 1);
 
-    private void HandleTaskCreated(QuestItem newQuest)
+    // Функция умного автораспределения задачи
+    private void HandleTaskCreated((QuestItem Task, bool AutoSchedule) args)
     {
-        quests.Add(newQuest);
-        selectedDate = newQuest.TargetDate;
+        var task = args.Task;
+
+        if (args.AutoSchedule)
+        {
+            // Ищем ближайший день начиная с сегодня, где хватает свободного времени
+            double taskHours = task.DurationMinutes / 60.0;
+            DateTime checkDate = DateTime.Today;
+
+            for (int i = 0; i < 30; i++) // ищем в пределах 30 дней
+            {
+                if (GetFreeHours(checkDate) >= taskHours)
+                {
+                    task.TargetDate = checkDate;
+                    break;
+                }
+                checkDate = checkDate.AddDays(1);
+            }
+        }
+
+        quests.Add(task);
+        selectedDate = task.TargetDate;
         activeTab = "work";
     }
 
@@ -194,6 +211,5 @@
     }
 
     private void SkipQuest(QuestItem quest) => quest.SkipTask();
-
     private void BuyReward(RewardItem reward) => player.TrySpendGold(reward.PriceGold);
 }

@@ -1,31 +1,42 @@
-﻿@using System.Globalization
-
-<section class="card border-0 text-white mb-4 p-3 shadow-lg rounded-4 time-card-rpg">
+﻿<section class="card border-0 text-white mb-4 p-3 shadow-lg rounded-4 time-card-rpg">
     <div class="d-flex justify-content-between align-items-center mb-3 px-2">
         <h5 class="text-info m-0 fw-bold d-flex align-items-center gap-2">
             ⏱️ Бюджет времени на @SelectedDate.ToString("dd MMMM (ddd)", RuCulture)
         </h5>
-        <span class="badge badge-selected-day fs-6">Выбран день</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-dark text-info border border-info fs-6">
+                🕒 Сейчас: @currentTime.ToString(@"hh\:mm")
+            </span>
+            <span class="badge badge-selected-day fs-6">Выбран день</span>
+        </div>
     </div>
+
     <div class="row text-center g-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="p-3 rounded-3 stat-box">
                 <span class="d-block text-slate-400 mb-1">✅ Выполнено задач</span>
                 <strong class="fs-4 text-success font-monospace">@CompletedHours / @TotalHours ч</strong>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="p-3 rounded-3 stat-box">
                 <span class="d-block text-slate-400 mb-1">🚗 Дорога</span>
                 <strong class="fs-4 text-white font-monospace">@CommuteHours ч</strong>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="p-3 rounded-3 stat-box">
                 <span class="d-block text-slate-400 mb-1">🎉 Свободный остаток</span>
                 <strong class="fs-4 font-monospace @(FreeHours < 0 ? "text-danger" : "text-warning")">
                     @FreeHours ч
                 </strong>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 rounded-3 stat-box border-warning">
+                <span class="d-block text-warning mb-1">🛌 До сна осталось</span>
+                <strong class="fs-4 text-warning font-monospace">@GetTimeToSleep()</strong>
+                <small class="d-block text-slate-400" style="font-size: 0.7rem;">(Цель: @GetTargetSleepTime().ToString(@"hh\:mm"))</small>
             </div>
         </div>
     </div>
@@ -59,6 +70,27 @@
     [Parameter] public double TotalHours { get; set; }
     [Parameter] public int CommuteHours { get; set; }
     [Parameter] public double FreeHours { get; set; }
+    [Parameter] public bool IsNightShift { get; set; }
 
     private CultureInfo RuCulture = new CultureInfo("ru-RU");
+    private TimeSpan currentTime => DateTime.Now.TimeOfDay;
+
+    // Целевое время отхода ко сну
+    private TimeSpan GetTargetSleepTime()
+    {
+        // В ночную смену лечь нужно в 09:40 утра
+        // В дневную смена / выходной — в 21:50 вечера
+        return IsNightShift ? new TimeSpan(9, 40, 0) : new TimeSpan(21, 50, 0);
+    }
+
+    // Расчет оставшегося времени до сна
+    private string GetTimeToSleep()
+    {
+        var target = GetTargetSleepTime();
+        var now = currentTime;
+
+        TimeSpan diff = target >= now ? target - now : (new TimeSpan(24, 0, 0) - now) + target;
+
+        return $"{diff.Hours} ч {diff.Minutes} мин";
+    }
 }

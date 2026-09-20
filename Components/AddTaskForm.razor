@@ -5,17 +5,38 @@
         <span>➕</span> Создание нового квеста
     </h4>
 
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mb-3 py-2 fw-bold">
+            ⚠️ @errorMessage
+        </div>
+    }
+
     <div class="mb-3">
         <label class="form-label text-slate-300 fw-bold">Название квеста:</label>
         <input type="text" class="form-control rpg-input"
                placeholder="Например: Прочесть 20 страниц C#..." @bind="newTaskTitle" />
     </div>
 
+    @* Галочка Автораспределения *@
+    <div class="form-check form-switch mb-3 p-2 bg-dark rounded border border-secondary">
+        <input class="form-check-input ms-1 me-2" type="checkbox" id="autoScheduleCheck" @bind="autoSchedule" />
+        <label class="form-check-input-label text-info fw-bold" for="autoScheduleCheck">
+            🤖 Умный автоподбор: приложение само найдет свободный день в расписании!
+        </label>
+    </div>
+
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <label class="form-label text-slate-300 fw-bold">Дата назначения:</label>
-            <input type="date" class="form-control rpg-input" @bind="newTaskDate" />
-        </div>
+        @if (!autoSchedule)
+        {
+            <div class="col-md-3">
+                <label class="form-label text-slate-300 fw-bold">Дата назначения:</label>
+                @* min constraint на прошедшие даты *@
+                <input type="date" class="form-control rpg-input"
+                       min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                       @bind="newTaskDate" />
+            </div>
+        }
         <div class="col-md-3">
             <label class="form-label text-slate-300 fw-bold">Награда (Gold):</label>
             <input type="number" class="form-control rpg-input" @bind="newTaskReward" />
@@ -78,22 +99,40 @@
 
 @code {
     [Parameter] public DateTime InitialDate { get; set; } = DateTime.Today;
-    [Parameter] public EventCallback<QuestItem> OnTaskCreated { get; set; }
+    [Parameter] public EventCallback<(QuestItem Task, bool AutoSchedule)> OnTaskCreated { get; set; }
 
     private string newTaskTitle = "";
     private DateTime newTaskDate = DateTime.Today;
     private int newTaskReward = 300;
     private int newTaskDuration = 60;
     private QuestType newTaskType = QuestType.PetProject;
+    private bool autoSchedule = false;
+    private string errorMessage = "";
 
     protected override void OnParametersSet()
     {
-        newTaskDate = InitialDate;
+        if (InitialDate >= DateTime.Today)
+            newTaskDate = InitialDate;
+        else
+            newTaskDate = DateTime.Today;
     }
 
     private async Task SubmitTask()
     {
-        if (string.IsNullOrWhiteSpace(newTaskTitle)) return;
+        errorMessage = "";
+
+        if (string.IsNullOrWhiteSpace(newTaskTitle))
+        {
+            errorMessage = "Введите название задачи!";
+            return;
+        }
+
+        // Защита от дурака: нельзя ставить задачу на прошедшую дату!
+        if (!autoSchedule && newTaskDate.Date < DateTime.Today)
+        {
+            errorMessage = "Нельзя планировать задачи на прошедшие дни!";
+            return;
+        }
 
         var quest = new QuestItem
         {
@@ -105,7 +144,7 @@
             ScheduledTime = new TimeSpan(20, 00, 0)
         };
 
-        await OnTaskCreated.InvokeAsync(quest);
+        await OnTaskCreated.InvokeAsync((quest, autoSchedule));
         newTaskTitle = "";
     }
 }

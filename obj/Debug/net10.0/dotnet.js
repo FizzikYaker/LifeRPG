@@ -5,7 +5,7 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
   "mainAssemblyName": "LifeRPG",
   "applicationEnvironment": "Development",
   "resources": {
-    "hash": "sha256-fPXI9xy5TeYVlp2gA27fU10lChbJKPMCtdheyWnWV0M=",
+    "hash": "sha256-UmuhNQWDFakRB9WETfL/3K7/3AQyKhe+bQPc0f0fcJw=",
     "jsModuleNative": [
       {
         "name": "dotnet.native.rjbmzc4jpg.js"
@@ -1242,16 +1242,16 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
       },
       {
         "virtualPath": "LifeRPG.wasm",
-        "name": "LifeRPG.7sfefmqcf7.wasm",
-        "hash": "sha256-mZGdVYd2Y0iAFPWUUE4Wjsj94qInzEE/zgl4ZjbfcyI=",
+        "name": "LifeRPG.zhtbwbpx84.wasm",
+        "hash": "sha256-6ZkXZYYOEqe2QPaPD26oa0Pjg0/eqX5Udn4EBZFgwgM=",
         "cache": "force-cache"
       }
     ],
     "pdb": [
       {
         "virtualPath": "LifeRPG.pdb",
-        "name": "LifeRPG.xtjgggeuh3.pdb",
-        "hash": "sha256-m4fU5W/9LB297SFM5bdDX/6eiIzrzJ3YLbwNEaG1wBg=",
+        "name": "LifeRPG.jl6h87fvjz.pdb",
+        "hash": "sha256-p28+ONG940VRkGqe8XCw8SWeHBdz/zlCX+UxPXd9wZE=",
         "cache": "force-cache"
       }
     ],
