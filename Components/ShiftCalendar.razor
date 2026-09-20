@@ -1,63 +1,102 @@
 ﻿@using LifeRPG.Models
 @using System.Globalization
 
-<section class="card bg-black border-secondary text-white mb-4 p-3 shadow rounded-3 w-100">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <button class="btn btn-outline-light btn-sm fw-bold px-3 fs-5" @onclick="OnPrevMonth">&lt;</button>
-        <h3 class="fw-bold m-0 text-warning text-capitalize">
-            📅 @CurrentMonth.ToString("MMMM yyyy", RuCulture)
+<section class="card border-0 text-white mb-4 p-3 shadow-lg rounded-4 style-calendar-container">
+    @* Шапка календаря: Переключение месяцев и название *@
+    <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+        <button class="btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-3 fs-5 nav-btn" @onclick="OnPrevMonth">&lt;</button>
+        <h3 class="fw-bold m-0 calendar-title text-capitalize d-flex align-items-center gap-2">
+            <span>📅</span> @CurrentMonth.ToString("MMMM yyyy", RuCulture)
         </h3>
-        <button class="btn btn-outline-light btn-sm fw-bold px-3 fs-5" @onclick="OnNextMonth">&gt;</button>
+        <button class="btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-3 fs-5 nav-btn" @onclick="OnNextMonth">&gt;</button>
     </div>
 
-    <div class="calendar-desktop-grid mb-2 text-center text-info fw-bold fs-6">
+    @* Дни недели *@
+    <div class="calendar-desktop-grid mb-2 text-center text-slate-400 fw-bold fs-6 day-headers">
         <div>Понедельник</div><div>Вторник</div><div>Среда</div><div>Четверг</div><div>Пятница</div><div>Суббота</div><div>Воскресенье</div>
     </div>
 
+    @* Сетка месяца *@
     <div class="calendar-desktop-grid">
+        @* Пустые ячейки для смещения 1-го числа *@
         @for (int i = 0; i < GetFirstDayOffset(); i++)
         {
-            <div class="calendar-day-cell bg-dark opacity-25 rounded-2"></div>
+            <div class="calendar-day-cell empty-cell rounded-3 opacity-25"></div>
         }
 
+        @* Ячейки дней месяца *@
         @foreach (var day in MonthDays)
         {
             var shift = GetShiftDetails(day);
             var isToday = day.Date == DateTime.Today;
             var isSelected = day.Date == SelectedDate.Date;
-            var dayTasks = Quests.Where(q => q.TargetDate.Date == day.Date).ToList();
+            var dayTasks = Quests.Where(q => q.TargetDate.Date == day.Date && !q.IsSkipped).ToList();
 
-            <div class="calendar-day-cell p-2 rounded-2 d-flex flex-column justify-content-between border @(isSelected ? "border-primary border-3 bg-dark" : isToday ? "border-warning border-2 bg-black" : "border-secondary bg-black")"
+            @* Вычисление подсветки плашки (Зелёный / Жёлтый / Красный) *@
+            var taskStatusClass = GetTaskStatusClass(dayTasks, isSelected, isToday);
+
+            <div class="calendar-day-cell p-2 rounded-3 d-flex flex-column justify-content-between @taskStatusClass"
                  style="cursor: pointer;"
                  @onclick="() => OnDateSelected.InvokeAsync(day)">
 
+                @* Шапка ячейки: Число и статус смены *@
                 <div class="d-flex justify-content-between align-items-center">
-                    <span class="fw-bold fs-5 @(isToday ? "text-warning" : "text-white")">@day.Day</span>
-                    <span class="badge @shift.BadgeClass">@shift.Icon @shift.Label</span>
+                    <span class="fw-bold fs-5 day-number @(isToday ? "text-warning" : "text-white")">@day.Day</span>
+                    <span class="badge shift-badge @shift.BadgeClass">@shift.Icon @shift.Label</span>
                 </div>
 
-                <div class="my-1 overflow-hidden" style="max-height: 55px;">
+                @* Список задач внутри карточки дня *@
+                <div class="my-1 overflow-hidden task-container">
                     @foreach (var task in dayTasks.Take(2))
                     {
-                        <div class="text-truncate small p-1 mb-1 rounded @(task.IsCompleted ? "bg-success text-white opacity-75" : "bg-secondary text-white")" style="font-size: 0.75rem;">
+                        <div class="text-truncate small p-1 mb-1 rounded-2 task-chip @(task.IsCompleted ? "task-done" : "task-pending")">
                             @(task.IsCompleted ? "✓ " : "")@task.Title
                         </div>
                     }
                     @if (dayTasks.Count > 2)
                     {
-                        <small class="text-info fw-bold" style="font-size: 0.7rem;">+ еще @(dayTasks.Count - 2) задач...</small>
+                        <small class="text-info fw-bold extra-tasks-label">+ еще @(dayTasks.Count - 2) задач...</small>
                     }
                 </div>
 
                 <div class="text-end">
-                    <small class="text-muted" style="font-size: 0.65rem;">Клик для просмотра</small>
+                    <small class="click-hint">Клик для просмотра</small>
                 </div>
             </div>
         }
     </div>
 </section>
 
+@* Темные стили с подсвечивающимися неоновыми рамками *@
 <style>
+    .style-calendar-container {
+        background: #0b1329;
+        border: 1px solid #1e293b !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .calendar-title {
+        color: #e2e8f0;
+        font-size: 1.5rem;
+    }
+
+    .nav-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #cbd5e1;
+        transition: all 0.2s ease;
+    }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+    .day-headers {
+        color: #94a3b8;
+        font-size: 0.9rem;
+    }
+
     .calendar-desktop-grid {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
@@ -65,14 +104,110 @@
     }
 
     .calendar-day-cell {
-        min-height: 110px;
+        min-height: 115px;
+        background: #111c35;
+        border: 1px solid #1e293b;
         transition: all 0.2s ease-in-out;
     }
 
         .calendar-day-cell:hover {
-            border-color: #0d6efd !important;
             transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         }
+
+    .empty-cell {
+        background: #080d1b;
+        border: 1px dashed #1e293b;
+    }
+
+    /* --- ПОДСВЕТКА СТАТУСА ВЫПОЛНЕНИЯ ЗАДАЧ --- */
+
+    /* Все задачи выполнены -> Зеленый неоновый контур */
+    .status-all-completed {
+        border: 2px solid #22c55e !important;
+        box-shadow: 0 0 12px rgba(34, 197, 94, 0.35);
+        background: #0c2419 !important;
+    }
+
+    /* Часть задач выполнена -> Желтый/Янтарный неоновый контур */
+    .status-half-completed {
+        border: 2px solid #eab308 !important;
+        box-shadow: 0 0 12px rgba(234, 179, 8, 0.35);
+        background: #24200c !important;
+    }
+
+    /* Задачи есть, но ничего не сделано -> Красный неоновый контур */
+    .status-none-completed {
+        border: 2px solid #ef4444 !important;
+        box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+        background: #280e13 !important;
+    }
+
+    /* Выбранная ячейка дня */
+    .cell-selected {
+        outline: 3px solid #38bdf8 !important;
+        outline-offset: -1px;
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.5) !important;
+    }
+
+    .cell-today {
+        box-shadow: inset 0 0 0 2px #f59e0b;
+    }
+
+    /* Стили плашек смен */
+    .shift-badge {
+        font-weight: 600;
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 12px;
+    }
+
+    .shift-day {
+        background: #fb923c;
+        color: #1e1b4b;
+    }
+
+    .shift-night {
+        background: #3b82f6;
+        color: #ffffff;
+    }
+
+    .shift-off {
+        background: #334155;
+        color: #e2e8f0;
+    }
+
+    /* Мини-карточки задач */
+    .task-container {
+        max-height: 58px;
+    }
+
+    .task-chip {
+        font-size: 0.75rem;
+        font-weight: 500;
+        line-height: 1.2;
+    }
+
+    .task-done {
+        background: rgba(34, 197, 94, 0.25);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.4);
+    }
+
+    .task-pending {
+        background: rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .extra-tasks-label {
+        font-size: 0.7rem;
+    }
+
+    .click-hint {
+        color: #64748b;
+        font-size: 0.65rem;
+    }
 </style>
 
 @code {
@@ -97,6 +232,36 @@
         return dayOfWeek == 0 ? 6 : dayOfWeek - 1;
     }
 
+    // Расчет подсветки в зависимости от процента выполнения задач
+    private string GetTaskStatusClass(List<QuestItem> dayTasks, bool isSelected, bool isToday)
+    {
+        string classes = "";
+
+        if (dayTasks.Any())
+        {
+            int completedCount = dayTasks.Count(q => q.IsCompleted);
+
+            if (completedCount == dayTasks.Count)
+            {
+                classes += "status-all-completed "; // Все сделано -> Зеленый
+            }
+            else if (completedCount > 0)
+            {
+                classes += "status-half-completed "; // Часть сделана -> Желтый
+            }
+            else
+            {
+                classes += "status-none-completed "; // Ничего не сделано -> Красный
+            }
+        }
+
+        if (isSelected) classes += "cell-selected ";
+        if (isToday) classes += "cell-today ";
+
+        return classes.Trim();
+    }
+
+    // Настройка смен и иконка геймпада 🎮 для выходных
     private (string Icon, string Label, string BadgeClass) GetShiftDetails(DateTime date)
     {
         int daysDiff = (date.Date - ShiftAnchorDate.Date).Days;
@@ -104,10 +269,10 @@
 
         return cycleIndex switch
         {
-            0 or 1 => ("☀️", "ОСН", "bg-danger text-white"),
-            2 or 3 => ("—", "ВЫХ", "bg-secondary text-white"),
-            4 or 5 => ("🌙", "НОЧЬ", "bg-dark border border-secondary text-white"),
-            _ => ("—", "ВЫХ", "bg-secondary text-white")
+            0 or 1 => ("☀️", "ДЕНЬ", "shift-day"),
+            2 or 3 => ("🎮", "ВЫХ", "shift-off"), // Выходной день с геймпадом!
+            4 or 5 => ("🌙", "НОЧЬ", "shift-night"),
+            _ => ("🎮", "ВЫХ", "shift-off")
         };
     }
 }
