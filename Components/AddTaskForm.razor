@@ -1,138 +1,21 @@
-﻿@using LifeRPG.Models
-
-<section class="card border-0 text-white p-4 shadow-lg rounded-4 add-form-card">
-    <h4 class="text-success mb-4 fw-bold d-flex align-items-center gap-2">
-        <span>➕</span> Создание нового квеста
-    </h4>
-
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <div class="alert alert-danger mb-3 py-2 fw-bold">
-            ⚠️ @errorMessage
-        </div>
-    }
-
-    <div class="mb-3">
-        <label class="form-label text-slate-300 fw-bold">Название квеста:</label>
-        <input type="text" class="form-control rpg-input"
-               placeholder="Например: Прочесть 20 страниц C#..." @bind="newTaskTitle" />
-    </div>
-
-    @* Галочка Автораспределения *@
-    <div class="form-check form-switch mb-3 p-2 bg-dark rounded border border-secondary">
-        <input class="form-check-input ms-1 me-2" type="checkbox" id="autoScheduleCheck" @bind="autoSchedule" />
-        <label class="form-check-input-label text-info fw-bold" for="autoScheduleCheck">
-            🤖 Умный автоподбор: приложение само найдет свободный день в расписании!
-        </label>
-    </div>
-
-    <div class="row g-3 mb-4">
-        @if (!autoSchedule)
-        {
-            <div class="col-md-3">
-                <label class="form-label text-slate-300 fw-bold">Дата назначения:</label>
-                @* min constraint на прошедшие даты *@
-                <input type="date" class="form-control rpg-input"
-                       min="@DateTime.Today.ToString("yyyy-MM-dd")"
-                       @bind="newTaskDate" />
-            </div>
-        }
-        <div class="col-md-3">
-            <label class="form-label text-slate-300 fw-bold">Награда (Gold):</label>
-            <input type="number" class="form-control rpg-input" @bind="newTaskReward" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label text-slate-300 fw-bold">Длительность (мин):</label>
-            <input type="number" class="form-control rpg-input" @bind="newTaskDuration" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label text-slate-300 fw-bold">Категория:</label>
-            <select class="form-select rpg-input" @bind="newTaskType">
-                <option value="@QuestType.WorkShift">Работа</option>
-                <option value="@QuestType.Study">Учеба</option>
-                <option value="@QuestType.PetProject">Pet-проект</option>
-                <option value="@QuestType.Daily">Привычка</option>
-            </select>
-        </div>
-    </div>
-
-    <button class="btn btn-success btn-lg fw-bold w-100 py-3 rounded-3 submit-btn" @onclick="SubmitTask">
-        💾 Сохранить и добавить в расписание
-    </button>
-</section>
-
-<style>
-    .add-form-card {
-        background: #0b1329;
-        border: 1px solid #1e293b !important;
-    }
-
-    .rpg-input {
-        background: #111c35;
-        border: 1px solid #1e293b;
-        color: #ffffff;
-        padding: 10px 14px;
-        border-radius: 8px;
-    }
-
-        .rpg-input:focus {
-            background: #111c35;
-            border-color: #38bdf8;
-            color: #ffffff;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
-        }
-
-    .submit-btn {
-        background: linear-gradient(135deg, #10b981, #059669);
-        border: none;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-    }
-
-        .submit-btn:hover {
-            background: linear-gradient(135deg, #059669, #047857);
-        }
-
-    .text-slate-300 {
-        color: #cbd5e1;
-    }
-</style>
-
-@code {
+﻿@code {
     [Parameter] public DateTime InitialDate { get; set; } = DateTime.Today;
-    [Parameter] public EventCallback<(QuestItem Task, bool AutoSchedule)> OnTaskCreated { get; set; }
+    [Parameter] public EventCallback<QuestItem> OnTaskCreated { get; set; }
 
     private string newTaskTitle = "";
     private DateTime newTaskDate = DateTime.Today;
     private int newTaskReward = 300;
     private int newTaskDuration = 60;
     private QuestType newTaskType = QuestType.PetProject;
-    private bool autoSchedule = false;
-    private string errorMessage = "";
 
     protected override void OnParametersSet()
     {
-        if (InitialDate >= DateTime.Today)
-            newTaskDate = InitialDate;
-        else
-            newTaskDate = DateTime.Today;
+        newTaskDate = InitialDate >= DateTime.Today ? InitialDate : DateTime.Today;
     }
 
     private async Task SubmitTask()
     {
-        errorMessage = "";
-
-        if (string.IsNullOrWhiteSpace(newTaskTitle))
-        {
-            errorMessage = "Введите название задачи!";
-            return;
-        }
-
-        // Защита от дурака: нельзя ставить задачу на прошедшую дату!
-        if (!autoSchedule && newTaskDate.Date < DateTime.Today)
-        {
-            errorMessage = "Нельзя планировать задачи на прошедшие дни!";
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(newTaskTitle)) return;
 
         var quest = new QuestItem
         {
@@ -144,7 +27,7 @@
             ScheduledTime = new TimeSpan(20, 00, 0)
         };
 
-        await OnTaskCreated.InvokeAsync((quest, autoSchedule));
+        await OnTaskCreated.InvokeAsync(quest);
         newTaskTitle = "";
     }
 }

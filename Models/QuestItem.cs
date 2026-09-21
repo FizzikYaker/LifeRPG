@@ -2,10 +2,10 @@
 
 public enum QuestPriority
 {
-    Low,      // Easy (10 gold)
-    Medium,   // Medium (50 gold)
-    High,     // Hard (100 gold)
-    Critical  // Неотложный
+    Low,      // Easy
+    Medium,   // Medium
+    High,     // Hard
+    Critical  // Обязательный
 }
 
 public enum RecurrenceRule
@@ -21,7 +21,7 @@ public class QuestItem
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Title { get; set; } = string.Empty;
     public int RewardGold { get; set; } = 50;
-    public QuestType Type { get; set; } = QuestType.PetProject;
+    public QuestPriority Type { get; set; } = QuestPriority.Medium;
     public bool IsCompleted { get; set; }
     public bool IsSkipped { get; set; }
     public int StreakDays { get; set; } = 0;
@@ -30,7 +30,7 @@ public class QuestItem
     public int DurationMinutes { get; set; } = 60;
     public DateTime TargetDate { get; set; } = DateTime.Today;
 
-    // --- Добавляем 2 новых поля в твой существующий класс ---
+    // Свойства приоритета и повторения
     public QuestPriority Priority { get; set; } = QuestPriority.Medium;
     public RecurrenceRule Recurrence { get; set; } = RecurrenceRule.None;
 
