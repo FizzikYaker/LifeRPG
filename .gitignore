@@ -1,0 +1,7 @@
+## Visual Studio / .NET / Blazor ignore
+bin/
+obj/
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
