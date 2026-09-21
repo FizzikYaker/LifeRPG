@@ -19,9 +19,9 @@
                     </button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link w-100 text-start sidebar-btn @(activeTab == "add-task" ? "active-tab-success" : "")"
-                            @onclick='() => activeTab = "add-task"'>
-                        ➕ Добавить задачу
+                    <button class="nav-link w-100 text-start sidebar-btn @(activeTab == "config" ? "active-tab" : "")"
+                            @onclick='() => activeTab = "config"'>
+                        ⚙️ График и Пул квестов
                     </button>
                 </li>
                 <li class="nav-item">
@@ -30,6 +30,7 @@
                         💳 Магазин наград
                     </button>
                 </li>
+
             </ul>
         </nav>
 
@@ -212,4 +213,12 @@
 
     private void SkipQuest(QuestItem quest) => quest.SkipTask();
     private void BuyReward(RewardItem reward) => player.TrySpendGold(reward.PriceGold);
+
+    private ScheduleConfig scheduleConfig = new ScheduleConfig();
+    private List<QuestItem> questTemplates = new List<QuestItem>
+{
+    new QuestItem { Title = "Тренировка в зале", Priority = QuestPriority.High, Recurrence = RecurrenceRule.OffDaysOnly, DurationMinutes = 90, RewardGold = 100 },
+    new QuestItem { Title = "Прочесть 20 страниц книги", Priority = QuestPriority.Medium, Recurrence = RecurrenceRule.Daily, DurationMinutes = 40, RewardGold = 40 },
+    new QuestItem { Title = "Учеба: C# и Blazor", Priority = QuestPriority.High, Recurrence = RecurrenceRule.Daily, DurationMinutes = 120, RewardGold = 150 }
+};
 }

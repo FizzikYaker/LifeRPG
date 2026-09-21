@@ -1,19 +1,38 @@
 ﻿namespace LifeRPG.Models;
 
+public enum QuestPriority
+{
+    Low,      // Easy (10 gold)
+    Medium,   // Medium (50 gold)
+    High,     // Hard (100 gold)
+    Critical  // Неотложный
+}
+
+public enum RecurrenceRule
+{
+    None,           // Разовая задача
+    Daily,          // Каждый день
+    WorkDaysOnly,   // Только в смену
+    OffDaysOnly     // Только в выходной
+}
+
 public class QuestItem
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Title { get; set; } = string.Empty;
-    public int RewardGold { get; set; }
-    public QuestType Type { get; set; }
+    public int RewardGold { get; set; } = 50;
+    public QuestType Type { get; set; } = QuestType.PetProject;
     public bool IsCompleted { get; set; }
     public bool IsSkipped { get; set; }
     public int StreakDays { get; set; } = 0;
     public bool IsNightShift { get; set; }
     public TimeSpan? ScheduledTime { get; set; }
     public int DurationMinutes { get; set; } = 60;
-
     public DateTime TargetDate { get; set; } = DateTime.Today;
+
+    // --- Добавляем 2 новых поля в твой существующий класс ---
+    public QuestPriority Priority { get; set; } = QuestPriority.Medium;
+    public RecurrenceRule Recurrence { get; set; } = RecurrenceRule.None;
 
     public string GetFormattedTimeRange()
     {

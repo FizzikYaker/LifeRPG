@@ -1,0 +1,270 @@
+﻿@using LifeRPG.Models
+
+
+<div class="d-flex flex-column gap-4">
+
+    @* ==================== БЛОК 1. НАСТРОЙКА ГРАФИКА РАБОТЫ / УЧЕБЫ ==================== *@
+    <section class="card border-0 text-white p-4 shadow-lg rounded-4 configurator-card">
+        <h4 class="text-info mb-4 fw-bold d-flex align-items-center gap-2">
+            <span>⚙️</span> Настройка режима жизни и смен
+        </h4>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label class="form-label text-slate-300 fw-bold">Паттерн графика:</label>
+                <select class="form-select rpg-input" @bind="Config.PatternType">
+                    <option value="@SchedulePatternType.Shift2_2_2_2">Сменный 2/2/2/2 (День / Вых / Ночь / Вых)</option>
+                    <option value="@SchedulePatternType.Standard5_2">Пятидневка (5/2)</option>
+                    <option value="@SchedulePatternType.Flexible">Гибкий график</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label text-slate-300 fw-bold">Точка отсчета (1-я дневная смена):</label>
+                <input type="date" class="form-control rpg-input" @bind="Config.AnchorDate" />
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label text-slate-300 fw-bold">Время на дорогу (часов в день):</label>
+                <input type="number" class="form-control rpg-input" @bind="Config.CommuteHours" />
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label text-slate-300 fw-bold">Подъем в Дневную/Выходной:</label>
+                <input type="time"
+					   class="form-control rpg-input"
+					   @bind="dayWakeTime" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-slate-300 fw-bold">Подъем в Ночную смену:</label>
+                <input type="time" class="form-control rpg-input" @bind="nightWakeTime" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-slate-300 fw-bold">Длительность смены (ч):</label>
+                <input type="number" class="form-control rpg-input" @bind="Config.ShiftDurationHours" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-slate-300 fw-bold">Макс. загрузка дня (%):</label>
+                <input type="number" class="form-control rpg-input" @bind="Config.MaxWorkloadPercent" min="50" max="100" />
+            </div>
+        </div>
+    </section>
+
+    @* ==================== БЛОК 2. ПУЛ ШАБЛОНОВ КВЕСТОВ ==================== *@
+    <section class="card border-0 text-white p-4 shadow-lg rounded-4 configurator-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="text-warning m-0 fw-bold d-flex align-items-center gap-2">
+                <span>📦</span> Пул регулярных квестов
+            </h4>
+            <button class="btn btn-sm btn-outline-warning fw-bold px-3 py-2 rounded-3" @onclick="ShowAddModal">
+                + Новый шаблон квеста
+            </button>
+        </div>
+
+        @if (!Templates.Any())
+        {
+            <div class="p-4 rounded-3 text-center text-slate-400 empty-box">
+                Пул квестов пуст. Добавьте свои частые задачи (тренировки, учебу, книги), чтобы приложение само распределяло их по календарю!
+            </div>
+        }
+        else
+        {
+            <div class="d-flex flex-column gap-2">
+                @foreach (var tpl in Templates)
+                {
+                    <div class="p-3 rounded-3 d-flex justify-content-between align-items-center template-item">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge @GetPriorityBadgeClass(tpl.Priority)">
+                                    Приоритет: @tpl.Priority
+                                </span>
+                                <h5 class="m-0 fw-bold text-white">@tpl.Title</h5>
+                            </div>
+                            <small class="text-warning fw-bold">+@tpl.RewardGold gold</small>
+                            <span class="text-slate-500 mx-1">|</span>
+                            <small class="text-slate-400">Длительность: @tpl.DurationMinutes мин</small>
+                            <span class="text-slate-500 mx-1">|</span>
+                            <small class="text-info">Повтор: @GetRecurrenceText(tpl)</small>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveTemplate(tpl)">
+                                🗑️ Удалить
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    @* ==================== БЛОК 3. ФОРМА ДОБАВЛЕНИЯ ШАБЛОНА ==================== *@
+    @if (isFormVisible)
+    {
+        <section class="card border-0 text-white p-4 shadow-lg rounded-4 add-template-modal">
+            <h5 class="text-success mb-3 fw-bold">➕ Добавление нового шаблона в пул</h5>
+
+            <div class="mb-3">
+                <label class="form-label text-slate-300">Название задачи:</label>
+                <input type="text" class="form-control rpg-input" placeholder="Например: Тренировка в зале..." @bind="newTitle" />
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label class="form-label text-slate-300">Приоритет:</label>
+                    <select class="form-select rpg-input" @bind="newPriority">
+                        <option value="@QuestPriority.Low">Низкий (Easy)</option>
+                        <option value="@QuestPriority.Medium">Средний (Medium)</option>
+                        <option value="@QuestPriority.High">Высокий (Hard)</option>
+                        <option value="@QuestPriority.Critical">Критический / Обязательный</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label text-slate-300">Повторение:</label>
+                    <select class="form-select rpg-input" @bind="newRecurrence">
+                        <option value="@RecurrenceRule.Daily">Каждый день</option>
+                        <option value="@RecurrenceRule.OffDaysOnly">Только в Выходные смены</option>
+                        <option value="@RecurrenceRule.WorkDaysOnly">Только в Рабочие смены</option>
+                        <option value="@RecurrenceRule.SpecificDays">N раз в неделю</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label text-slate-300">Длительность (мин):</label>
+                    <input type="number" class="form-control rpg-input" @bind="newDuration" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label text-slate-300">Награда (Gold):</label>
+                    <input type="number" class="form-control rpg-input" @bind="newReward" />
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-success fw-bold px-4" @onclick="SaveTemplate">💾 Добавить в пул</button>
+                <button class="btn btn-outline-secondary px-4" @onclick="() => isFormVisible = false">Отмена</button>
+            </div>
+        </section>
+    }
+</div>
+
+<style>
+    .configurator-card {
+        background: #0b1329;
+        border: 1px solid #1e293b !important;
+    }
+
+    .add-template-modal {
+        background: #111c35;
+        border: 1px solid #22c55e !important;
+    }
+
+    .rpg-input {
+        background: #111c35;
+        border: 1px solid #1e293b;
+        color: #ffffff;
+        padding: 10px 14px;
+        border-radius: 8px;
+    }
+
+        .rpg-input:focus {
+            background: #111c35;
+            border-color: #38bdf8;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+
+    .template-item {
+        background: #111c35;
+        border: 1px solid #1e293b;
+    }
+
+    .empty-box {
+        border: 1px dashed #1e293b;
+        background: #0e172a;
+    }
+
+    .text-slate-300 {
+        color: #cbd5e1;
+    }
+
+    .text-slate-400 {
+        color: #94a3b8;
+    }
+
+    .text-slate-500 {
+        color: #64748b;
+    }
+</style>
+
+@code {
+    [Parameter] public ScheduleConfig Config { get; set; } = new();
+    [Parameter] public List<QuestItem> Templates { get; set; } = new();
+    [Parameter] public EventCallback OnConfigUpdated { get; set; }
+
+    private bool isFormVisible = false;
+    private string newTitle = "";
+    private QuestPriority newPriority = QuestPriority.Medium;
+    private RecurrenceRule newRecurrence = RecurrenceRule.Daily;
+    private int newDuration = 60;
+    private int newReward = 50;
+
+    private TimeSpan dayWakeTime
+    {
+        get => Config.DayShiftWakeTime;
+        set => Config.DayShiftWakeTime = value;
+    }
+
+    private TimeSpan nightWakeTime
+    {
+        get => Config.NightShiftWakeTime;
+        set => Config.NightShiftWakeTime = value;
+    }
+
+    private void ShowAddModal() => isFormVisible = true;
+
+    private void SaveTemplate()
+    {
+        if (string.IsNullOrWhiteSpace(newTitle)) return;
+
+        Templates.Add(new QuestItem
+        {
+            Title = newTitle,
+            Priority = newPriority,
+            Recurrence = newRecurrence,
+            DurationMinutes = newDuration,
+            RewardGold = newReward
+        });
+
+        newTitle = "";
+        isFormVisible = false;
+        OnConfigUpdated.InvokeAsync();
+    }
+
+    private void RemoveTemplate(QuestItem tpl)
+    {
+        Templates.Remove(tpl);
+        OnConfigUpdated.InvokeAsync();
+    }
+
+    private string GetPriorityBadgeClass(QuestPriority p) => p switch
+    {
+        QuestPriority.Low => "bg-secondary text-white",
+        QuestPriority.Medium => "bg-info text-dark",
+        QuestPriority.High => "bg-warning text-dark fw-bold",
+        QuestPriority.Critical => "bg-danger text-white fw-bold",
+        _ => "bg-secondary"
+    };
+
+    private string GetRecurrenceText(QuestItem t) => t.Recurrence switch
+    {
+        RecurrenceRule.Daily => "Каждый день",
+        RecurrenceRule.WorkDaysOnly => "Только в смену",
+        RecurrenceRule.OffDaysOnly => "Только в выходной",
+        RecurrenceRule.SpecificDays => $"{t.TimesPerWeek} раз в неделю",
+        _ => "—"
+    };
+}
