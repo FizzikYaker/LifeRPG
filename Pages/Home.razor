@@ -66,7 +66,8 @@
             }
             else if (activeTab == "add-task")
             {
-                <AddTaskForm InitialDate="selectedDate" OnTaskCreated="HandleTaskCreated" />
+                <AddTaskForm InitialDate="selectedDate"
+                             OnTaskCreated="HandleTaskCreated" />
             }
             else if (activeTab == "money")
             {
@@ -190,7 +191,7 @@
 
         if (args.AutoSchedule)
         {
-            // Логика умного автоподбора даты
+            // Умный поиск свободного дня под длительность задачи
             double taskHours = task.DurationMinutes / 60.0;
             DateTime checkDate = DateTime.Today;
 
