@@ -43,7 +43,10 @@
 </section>
 
 @code {
+    [Parameter] public ScheduleConfig Config { get; set; } = new ScheduleConfig();
+    [Parameter] public List<QuestItem> Templates { get; set; } = new List<QuestItem>();
     [Parameter] public DateTime InitialDate { get; set; } = DateTime.Today;
+
     [Parameter] public EventCallback<(QuestItem Task, bool AutoSchedule)> OnTaskCreated { get; set; }
 
     private string newTaskTitle = "";

@@ -4,6 +4,7 @@
     // Если передаем и задачу, и флаг автораспределения:
     [Parameter] public EventCallback<(QuestItem Task, bool AutoSchedule)> OnTaskCreated { get; set; }
 
+
     private string newTaskTitle = "";
     private DateTime newTaskDate = DateTime.Today;
     private int newTaskReward = 300;
