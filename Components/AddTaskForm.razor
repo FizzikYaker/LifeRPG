@@ -1,5 +1,7 @@
 ﻿@code {
     [Parameter] public DateTime InitialDate { get; set; } = DateTime.Today;
+
+    // Если передаем и задачу, и флаг автораспределения:
     [Parameter] public EventCallback<(QuestItem Task, bool AutoSchedule)> OnTaskCreated { get; set; }
 
     private string newTaskTitle = "";
@@ -7,6 +9,9 @@
     private int newTaskReward = 300;
     private int newTaskDuration = 60;
     private QuestType newTaskType = QuestType.PetProject;
+
+    // Переменная автоподбора (исправляет CS0103)
+    private bool autoSchedule = false;
 
     protected override void OnParametersSet()
     {
@@ -27,6 +32,7 @@
             ScheduledTime = new TimeSpan(20, 00, 0)
         };
 
+        // Вызываем событие, передавая кортеж (Task, AutoSchedule)
         await OnTaskCreated.InvokeAsync((quest, autoSchedule));
         newTaskTitle = "";
     }

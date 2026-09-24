@@ -190,11 +190,11 @@
 
         if (args.AutoSchedule)
         {
-            // Ищем ближайший день начиная с сегодня, где хватает свободного времени
+            // Логика умного автоподбора даты
             double taskHours = task.DurationMinutes / 60.0;
             DateTime checkDate = DateTime.Today;
 
-            for (int i = 0; i < 30; i++) // ищем в пределах 30 дней
+            for (int i = 0; i < 30; i++)
             {
                 if (GetFreeHours(checkDate) >= taskHours)
                 {
@@ -209,6 +209,7 @@
         selectedDate = task.TargetDate;
         activeTab = "work";
     }
+
 
     private void CompleteQuest(QuestItem quest)
     {
