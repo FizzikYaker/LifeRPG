@@ -1,0 +1,82 @@
+﻿@using LifeRPG.Models
+
+<section class="card border-0 text-white p-4 shadow-lg rounded-4 mb-4 config-card">
+    <h4 class="text-info mb-3 fw-bold">⚙️ Настройка графика</h4>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label class="form-label text-slate-300">Тип графика:</label>
+            <select class="form-select" @bind="Config.PatternType">
+                <option value="@SchedulePatternType.Shift2_2_2_2">Смены 2/2 (день/ночь)</option>
+                <option value="@SchedulePatternType.Standard5_2">Пятидневка 5/2</option>
+                <option value="@SchedulePatternType.Flexible">Гибкий (N через M)</option>
+            </select>
+        </div>
+
+        @if (Config.PatternType == SchedulePatternType.Flexible)
+        {
+            <div class="col-md-4">
+                <label class="form-label text-slate-300">Рабочих дней подряд:</label>
+                <input type="number" min="1" class="form-control" @bind="Config.WorkDaysInCycle" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-slate-300">Выходных дней подряд:</label>
+                <input type="number" min="1" class="form-control" @bind="Config.OffDaysInCycle" />
+            </div>
+        }
+
+        <div class="col-md-4">
+            <label class="form-label text-slate-300">Дата отсчёта графика:</label>
+            <input type="date" class="form-control"
+                   value="@Config.AnchorDate.ToString("yyyy-MM-dd")"
+                   @onchange="OnAnchorDateChanged" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label text-slate-300">Подъём (дневная смена):</label>
+            <input type="time" class="form-control" @bind="Config.DayShiftWakeTime" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label text-slate-300">Подъём (ночная смена):</label>
+            <input type="time" class="form-control" @bind="Config.NightShiftWakeTime" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label text-slate-300">Дорога до работы (ч):</label>
+            <input type="number" min="0" class="form-control" @bind="Config.CommuteHours" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label text-slate-300">Макс. нагрузка на день (%):</label>
+            <input type="number" min="10" max="100" class="form-control" @bind="Config.MaxWorkloadPercent" />
+        </div>
+    </div>
+
+    <button class="btn btn-info fw-bold px-4" @onclick="Save">💾 Сохранить график</button>
+</section>
+
+<style>
+    .config-card {
+        background: #0b1329;
+        border: 1px solid #1e293b !important;
+    }
+
+    .text-slate-300 {
+        color: #cbd5e1;
+    }
+</style>
+
+@code {
+    [Parameter] public ScheduleConfig Config { get; set; } = new();
+    [Parameter] public List<QuestItem> Templates { get; set; } = new();
+    [Parameter] public EventCallback OnConfigUpdated { get; set; }
+
+    private void OnAnchorDateChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var parsed))
+            Config.AnchorDate = parsed;
+    }
+
+    private async Task Save()
+    {
+        await OnConfigUpdated.InvokeAsync();
+    }
+}
