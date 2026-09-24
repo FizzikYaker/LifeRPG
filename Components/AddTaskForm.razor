@@ -1,6 +1,6 @@
 ﻿@code {
     [Parameter] public DateTime InitialDate { get; set; } = DateTime.Today;
-    [Parameter] public EventCallback<QuestItem> OnTaskCreated { get; set; }
+    [Parameter] public EventCallback<(QuestItem Task, bool AutoSchedule)> OnTaskCreated { get; set; }
 
     private string newTaskTitle = "";
     private DateTime newTaskDate = DateTime.Today;
@@ -27,7 +27,7 @@
             ScheduledTime = new TimeSpan(20, 00, 0)
         };
 
-        await OnTaskCreated.InvokeAsync(quest);
+        await OnTaskCreated.InvokeAsync((quest, autoSchedule));
         newTaskTitle = "";
     }
 }
