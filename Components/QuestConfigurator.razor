@@ -1,6 +1,8 @@
 ﻿@using LifeRPG.Models
 
 <div class="d-flex flex-column gap-4">
+
+    @* БЛОК 1. НАСТРОЙКА ГРАФИКА РАБОТЫ / УЧЕБЫ *@
     <section class="card border-0 text-white p-4 shadow-lg rounded-4 configurator-card">
         <h4 class="text-info mb-4 fw-bold d-flex align-items-center gap-2">
             <span>⚙️</span> Настройка режима жизни и смен
@@ -30,11 +32,11 @@
         <div class="row g-3">
             <div class="col-md-3">
                 <label class="form-label text-slate-300 fw-bold">Подъем в Дневную/Выходной:</label>
-                <input type="time" class="form-control rpg-input" @bind="dayWakeTimeStr" />
+                <input type="time" class="form-control rpg-input" @bind="SafeConfig.DayShiftWakeTime" />
             </div>
             <div class="col-md-3">
                 <label class="form-label text-slate-300 fw-bold">Подъем в Ночную смену:</label>
-                <input type="time" class="form-control rpg-input" @bind="nightWakeTimeStr" />
+                <input type="time" class="form-control rpg-input" @bind="SafeConfig.NightShiftWakeTime" />
             </div>
             <div class="col-md-3">
                 <label class="form-label text-slate-300 fw-bold">Длительность смены (ч):</label>
@@ -47,6 +49,7 @@
         </div>
     </section>
 
+    @* БЛОК 2. ПУЛ ШАБЛОНОВ КВЕСТОВ *@
     <section class="card border-0 text-white p-4 shadow-lg rounded-4 configurator-card">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="text-warning m-0 fw-bold d-flex align-items-center gap-2">
@@ -94,6 +97,7 @@
         }
     </section>
 
+    @* БЛОК 3. ФОРМА ДОБАВЛЕНИЯ ШАБЛОНА *@
     @if (isFormVisible)
     {
         <section class="card border-0 text-white p-4 shadow-lg rounded-4 add-template-modal">
@@ -193,7 +197,6 @@
 </style>
 
 @code {
-    // ВСЕ ТРИ ПАРАМЕТРА ОБЪЯВЛЕНЫ С [Parameter]
     [Parameter] public ScheduleConfig? Config { get; set; }
     [Parameter] public List<QuestItem>? Templates { get; set; }
     [Parameter] public EventCallback OnConfigUpdated { get; set; }
@@ -207,26 +210,6 @@
     private RecurrenceRule newRecurrence = RecurrenceRule.Daily;
     private int newDuration = 60;
     private int newReward = 50;
-
-    private string dayWakeTimeStr
-    {
-        get => SafeConfig.DayShiftWakeTime.ToString(@"hh\:mm");
-        set
-        {
-            if (TimeSpan.TryParse(value, out var ts))
-                SafeConfig.DayShiftWakeTime = ts;
-        }
-    }
-
-    private string nightWakeTimeStr
-    {
-        get => SafeConfig.NightShiftWakeTime.ToString(@"hh\:mm");
-        set
-        {
-            if (TimeSpan.TryParse(value, out var ts))
-                SafeConfig.NightShiftWakeTime = ts;
-        }
-    }
 
     private void ShowAddModal() => isFormVisible = true;
 
