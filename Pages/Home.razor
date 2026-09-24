@@ -58,10 +58,15 @@
                           OnSkipQuest="SkipQuest"
                           OnAddTaskClicked='() => activeTab = "add-task"' />
             }
+            else if (activeTab == "config")
+            {
+                <QuestConfigurator Config="scheduleConfig"
+                                   Templates="questTemplates"
+                                   OnConfigUpdated="() => { }" />
+            }
             else if (activeTab == "add-task")
             {
-                <AddTaskForm InitialDate="selectedDate"
-                             OnTaskCreated="HandleTaskCreated" />
+                <AddTaskForm InitialDate="selectedDate" OnTaskCreated="HandleTaskCreated" />
             }
             else if (activeTab == "money")
             {

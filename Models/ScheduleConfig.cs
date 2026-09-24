@@ -16,4 +16,7 @@ public class ScheduleConfig
     public int ShiftDurationHours { get; set; } = 12;
     public int CommuteHours { get; set; } = 2;
     public int MaxWorkloadPercent { get; set; } = 80;
+
+    public int WorkDaysInCycle { get; set; } = 1;  // например "1" в 1/4
+    public int OffDaysInCycle { get; set; } = 4;    // например "4" в 1/4
 }

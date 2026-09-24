@@ -2,18 +2,16 @@
 
 public enum QuestPriority
 {
-    Low,      // Easy
-    Medium,   // Medium
-    High,     // Hard
-    Critical  // Обязательный
+    Low, Medium, High, Critical
 }
 
 public enum RecurrenceRule
 {
-    None,           // Разовая задача
-    Daily,          // Каждый день
-    WorkDaysOnly,   // Только в смену
-    OffDaysOnly     // Только в выходной
+    None,
+    Daily,
+    WorkDaysOnly,
+    OffDaysOnly,
+    SpecificDays   // N раз в неделю, гибко
 }
 
 public class QuestItem
@@ -21,7 +19,12 @@ public class QuestItem
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Title { get; set; } = string.Empty;
     public int RewardGold { get; set; } = 50;
-    public QuestPriority Type { get; set; } = QuestPriority.Medium;
+
+    public QuestType Type { get; set; } = QuestType.OneTime;      // <-- было QuestPriority, теперь QuestType
+    public QuestPriority Priority { get; set; } = QuestPriority.Medium;
+    public RecurrenceRule Recurrence { get; set; } = RecurrenceRule.None;
+    public int TimesPerWeek { get; set; } = 3;                    // <-- новое поле для SpecificDays
+
     public bool IsCompleted { get; set; }
     public bool IsSkipped { get; set; }
     public int StreakDays { get; set; } = 0;
@@ -29,23 +32,17 @@ public class QuestItem
     public TimeSpan? ScheduledTime { get; set; }
     public int DurationMinutes { get; set; } = 60;
     public DateTime TargetDate { get; set; } = DateTime.Today;
-
-    // Свойства приоритета и повторения
-    public QuestPriority Priority { get; set; } = QuestPriority.Medium;
-    public RecurrenceRule Recurrence { get; set; } = RecurrenceRule.None;
+    public QuestLoad Load { get; set; } = QuestLoad.Light;
 
     public string GetFormattedTimeRange()
     {
         if (!ScheduledTime.HasValue) return string.Empty;
-        var startTime = ScheduledTime.Value;
-        var endTime = startTime.Add(TimeSpan.FromMinutes(DurationMinutes));
-        return $"{startTime:hh\\:mm} - {endTime:hh\\:mm}";
+        var start = ScheduledTime.Value;
+        var end = start.Add(TimeSpan.FromMinutes(DurationMinutes));
+        return $"{start:hh\\:mm} - {end:hh\\:mm}";
     }
 
-    public void SkipTask()
-    {
-        IsSkipped = true;
-    }
+    public void SkipTask() => IsSkipped = true;
 
     public int GetCalculatedReward()
     {

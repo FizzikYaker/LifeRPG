@@ -10,4 +10,7 @@ public class RewardItem // Шаблон для покупки в магазин�
 
     public int PriceGold { get; set; }
     // Стоимость в золоте
+
+    public int DurationMinutes { get; set; } = 60;
+    public QuestLoad Load { get; set; } = QuestLoad.PassiveRest;
 }
