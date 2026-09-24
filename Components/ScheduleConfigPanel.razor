@@ -34,11 +34,15 @@
 
         <div class="col-md-4">
             <label class="form-label text-slate-300">Подъём (дневная смена):</label>
-            <input type="time" class="form-control" @bind="Config.DayShiftWakeTime" />
+            <input type="time" class="form-control"
+                   value="@Config.DayShiftWakeTime.ToString(@"hh\:mm")"
+                   @onchange="e => Config.DayShiftWakeTime = ParseTime(e)" />
         </div>
         <div class="col-md-4">
             <label class="form-label text-slate-300">Подъём (ночная смена):</label>
-            <input type="time" class="form-control" @bind="Config.NightShiftWakeTime" />
+            <input type="time" class="form-control"
+                   value="@Config.NightShiftWakeTime.ToString(@"hh\:mm")"
+                   @onchange="e => Config.NightShiftWakeTime = ParseTime(e)" />
         </div>
         <div class="col-md-4">
             <label class="form-label text-slate-300">Дорога до работы (ч):</label>
@@ -78,5 +82,9 @@
     private async Task Save()
     {
         await OnConfigUpdated.InvokeAsync();
+    }
+    private TimeSpan ParseTime(ChangeEventArgs e)
+    {
+        return TimeSpan.TryParse(e.Value?.ToString(), out var t) ? t : TimeSpan.Zero;
     }
 }
