@@ -1,6 +1,10 @@
 ﻿@using LifeRPG.Models
 @using System.Globalization
 
+@* Берём общий сервис графика из DI (тот же объект, что в Home).
+   Теперь календарь и бюджет времени всегда согласованы. *@
+@inject ShiftScheduleService shiftService
+
 <section class="card border-0 text-white mb-4 p-3 shadow-lg rounded-4 style-calendar-container">
     @* Шапка календаря: Переключение месяцев и название *@
     <div class="d-flex justify-content-between align-items-center mb-3 px-2">
@@ -162,6 +166,11 @@
         border-radius: 12px;
     }
 
+    .shift-work {
+        background: #22c55e;
+        color: #052e16;
+    }
+
     .shift-day {
         background: #fb923c;
         color: #1e1b4b;
@@ -219,7 +228,6 @@
     [Parameter] public EventCallback OnNextMonth { get; set; }
 
     private CultureInfo RuCulture = new CultureInfo("ru-RU");
-    private DateTime ShiftAnchorDate = new DateTime(2026, 9, 1);
 
     private List<DateTime> MonthDays => Enumerable.Range(1, DateTime.DaysInMonth(CurrentMonth.Year, CurrentMonth.Month))
         .Select(day => new DateTime(CurrentMonth.Year, CurrentMonth.Month, day))
@@ -262,17 +270,23 @@
     }
 
     // Настройка смен и иконка геймпада 🎮 для выходных
+    // Превращает тип дня из сервиса (Day/Night/Off/Work) в то, что рисуем на плашке:
+    //   Icon       - эмодзи
+    //   Label      - короткая подпись
+    //   BadgeClass - CSS-класс цвета (см. стили .shift-day, .shift-night, .shift-off)
+    // Сам расчёт цикла (2/2, 5/2, "N через M") теперь НЕ здесь, а в ShiftScheduleService.
     private (string Icon, string Label, string BadgeClass) GetShiftDetails(DateTime date)
     {
-        int daysDiff = (date.Date - ShiftAnchorDate.Date).Days;
-        int cycleIndex = (daysDiff % 8 + 8) % 8;
+        // Спрашиваем у сервиса, какой это день по текущим настройкам графика
+        ShiftDayType type = shiftService.GetShiftType(date);
 
-        return cycleIndex switch
+        // switch-выражение: слева тип дня, справа кортеж (иконка, подпись, css-класс)
+        return type switch
         {
-            0 or 1 => ("☀️", "ДЕНЬ", "shift-day"),
-            2 or 3 => ("🎮", "ВЫХ", "shift-off"), // Выходной день с геймпадом!
-            4 or 5 => ("🌙", "НОЧЬ", "shift-night"),
-            _ => ("🎮", "ВЫХ", "shift-off")
+            ShiftDayType.Day => ("☀️", "ДЕНЬ", "shift-day"),
+            ShiftDayType.Night => ("🌙", "НОЧЬ", "shift-night"),
+            ShiftDayType.Work => ("💼", "РАБ", "shift-work"),  // для 5/2 и гибкого графика
+            _ => ("🎮", "ВЫХ", "shift-off")    // Off и любой неожиданный случай
         };
     }
 }

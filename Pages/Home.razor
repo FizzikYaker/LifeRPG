@@ -2,6 +2,10 @@
 @using LifeRPG.Models
 @using LifeRPG.Components
 
+@* @inject = "дай мне готовый объект из DI". Мы больше не создаём конфиг сами через new *@
+@inject ScheduleConfig scheduleConfig
+@inject ShiftScheduleService shiftService
+
 <PageTitle>Life RPG — Главный экран</PageTitle>
 
 <div class="d-flex flex-column vh-100 rpg-app-bg text-white overflow-hidden">
@@ -41,9 +45,9 @@
                 <TimeBudgetCard SelectedDate="selectedDate"
                                 CompletedHours="GetCompletedTasksHours(selectedDate)"
                                 TotalHours="GetTotalTasksHours(selectedDate)"
-                                CommuteHours="commuteHours"
+                                CommuteHours="GetCommuteHours(selectedDate)"
                                 FreeHours="GetFreeHours(selectedDate)"
-                                IsNightShift="IsNightShift(selectedDate)" />
+                                IsNightShift="shiftService.IsNightShift(selectedDate)" />
 
                 <ShiftCalendar CurrentMonth="currentMonth"
                                SelectedDate="selectedDate"
@@ -128,10 +132,8 @@
     private PlayerProfile player = new PlayerProfile();
     private int currentStreak = 5;
     private string activeTab = "work";
-    private int commuteHours = 2;
     private DateTime selectedDate = DateTime.Today;
     private DateTime currentMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-    private DateTime shiftAnchorDate = new DateTime(2026, 9, 1);
 
     private List<QuestItem> quests = new List<QuestItem>
     {
@@ -166,12 +168,6 @@
     private void NextMonth() => currentMonth = currentMonth.AddMonths(1);
     private void SelectDate(DateTime date) => selectedDate = date;
 
-    private bool IsNightShift(DateTime date)
-    {
-        int daysDiff = (date.Date - shiftAnchorDate.Date).Days;
-        int cycleIndex = (daysDiff % 8 + 8) % 8;
-        return cycleIndex == 4 || cycleIndex == 5; // Ночная смена
-    }
 
     private double GetTotalTasksHours(DateTime date) =>
         Math.Round(quests.Where(q => q.TargetDate.Date == date.Date && !q.IsSkipped).Sum(q => q.DurationMinutes) / 60.0, 1);
@@ -179,8 +175,16 @@
     private double GetCompletedTasksHours(DateTime date) =>
         Math.Round(quests.Where(q => q.TargetDate.Date == date.Date && q.IsCompleted).Sum(q => q.DurationMinutes) / 60.0, 1);
 
+    // Сколько часов уйдёт на дорогу в конкретный день.
+    // IsWorkDay вернёт true для дневной смены, ночной смены и обычного рабочего дня (5/2, гибкий).
+    // В выходной (Off) ехать никуда не надо, поэтому 0.
+    private int GetCommuteHours(DateTime date) =>
+        shiftService.IsWorkDay(date) ? scheduleConfig.CommuteHours : 0;
+
+    // Свободные часы за день = 24 − дорога (только в рабочие дни) − запланированные задачи.
+    // Math.Round(..., 1) оставляет один знак после запятой (например, 9.5).
     private double GetFreeHours(DateTime date) =>
-        Math.Round(24.0 - (commuteHours + GetTotalTasksHours(date)), 1);
+        Math.Round(24.0 - (GetCommuteHours(date) + GetTotalTasksHours(date)), 1);
 
     // Функция умного автораспределения задачи
     private void HandleTaskCreated((QuestItem Task, bool AutoSchedule) args)
@@ -219,7 +223,6 @@
     private void SkipQuest(QuestItem quest) => quest.SkipTask();
     private void BuyReward(RewardItem reward) => player.TrySpendGold(reward.PriceGold);
 
-    private ScheduleConfig scheduleConfig = new ScheduleConfig();
     private List<QuestItem> questTemplates = new List<QuestItem>
 {
     new QuestItem { Title = "Тренировка в зале", Priority = QuestPriority.High, Recurrence = RecurrenceRule.OffDaysOnly, DurationMinutes = 90, RewardGold = 100 },
