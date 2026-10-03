@@ -142,7 +142,7 @@
             DurationMinutes = newTaskDuration,
             Type = newTaskType,
             TargetDate = newTaskDate
-            // ScheduledTime больше не задаём: время начала теперь определяет Home
+            // ScheduledTime не задаём: время начала определяет Home
         };
 
         await OnTaskCreated.InvokeAsync((quest, autoSchedule));

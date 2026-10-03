@@ -232,6 +232,16 @@
         return Task.FromResult<string?>(null);
     }
 
+    // Сколько часов в этот день ещё можно занять задачами с учётом лимита нагрузки.
+    // Лимит дня = 24 ч * процент из настроек (по умолчанию 80% = 19.2 ч).
+    // Из лимита вычитаем дорогу и уже запланированные задачи.
+    private double GetAvailableHours(DateTime date)
+    {
+        double dayLimit = 24.0 * scheduleConfig.MaxWorkloadPercent / 100.0;
+        double used = GetCommuteHours(date) + GetTotalTasksHours(date);
+        return Math.Round(dayLimit - used, 1);
+    }
+
     // Ищет первый день, куда помещается задача, И в нём находит время начала.
     // Возвращает кортеж (день, время) или null.
     // "(DateTime Date, TimeSpan Start)?" = кортеж, который может отсутствовать.
