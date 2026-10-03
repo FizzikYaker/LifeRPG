@@ -141,8 +141,8 @@
             RewardGold = newTaskReward,
             DurationMinutes = newTaskDuration,
             Type = newTaskType,
-            TargetDate = newTaskDate,
-            ScheduledTime = new TimeSpan(20, 00, 0)
+            TargetDate = newTaskDate
+            // ScheduledTime больше не задаём: время начала теперь определяет Home
         };
 
         await OnTaskCreated.InvokeAsync((quest, autoSchedule));

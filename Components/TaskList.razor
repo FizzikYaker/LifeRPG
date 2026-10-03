@@ -12,7 +12,12 @@
     </div>
 
     @{
-        var selectedDayTasks = Quests.Where(q => q.TargetDate.Date == SelectedDate.Date).ToList();
+        // OrderBy сортирует по времени начала (раньше стоящая задача выше).
+        // У задач без времени ScheduledTime = null, они окажутся в начале списка.
+        var selectedDayTasks = Quests
+            .Where(q => q.TargetDate.Date == SelectedDate.Date)
+            .OrderBy(q => q.ScheduledTime)
+            .ToList();
     }
 
     @if (!selectedDayTasks.Any())

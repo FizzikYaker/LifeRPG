@@ -129,6 +129,9 @@
 </style>
 
 @code {
+    private static readonly TimeSpan PlanDayStart = new TimeSpan(8, 0, 0);
+    private static readonly TimeSpan PlanDayEnd = new TimeSpan(22, 0, 0);
+
     private PlayerProfile player = new PlayerProfile();
     private int currentStreak = 5;
     private string activeTab = "work";
@@ -186,31 +189,125 @@
     private double GetFreeHours(DateTime date) =>
         Math.Round(24.0 - (GetCommuteHours(date) + GetTotalTasksHours(date)), 1);
 
-    // Функция умного автораспределения задачи
-    private void HandleTaskCreated((QuestItem Task, bool AutoSchedule) args)
+    private Task<string?> HandleTaskCreated((QuestItem Task, bool AutoSchedule) args)
     {
         var task = args.Task;
 
         if (args.AutoSchedule)
         {
-            // Умный поиск свободного дня под длительность задачи
-            double taskHours = task.DurationMinutes / 60.0;
-            DateTime checkDate = DateTime.Today;
+            // Автоподбор: ищем и день, и время начала
+            var found = FindDayForTask(task.DurationMinutes, DateTime.Today, 365);
 
-            for (int i = 0; i < 30; i++)
+            if (found == null)
             {
-                if (GetFreeHours(checkDate) >= taskHours)
-                {
-                    task.TargetDate = checkDate;
-                    break;
-                }
-                checkDate = checkDate.AddDays(1);
+                return Task.FromResult<string?>(
+                    "Не нашёл свободного дня на ближайший год. " +
+                    "Уменьшите длительность задачи или увеличьте лимит нагрузки в настройках графика.");
             }
+
+            task.TargetDate = found.Value.Date;
+            task.ScheduledTime = found.Value.Start;
+        }
+        else
+        {
+            // Ручной выбор даты: день задан, но время начала всё равно подбираем,
+            // чтобы задача не легла поверх других
+            var start = FindFreeStart(task.TargetDate, task.DurationMinutes);
+
+            if (start == null)
+            {
+                return Task.FromResult<string?>(
+                    "В выбранный день нет свободного окна такой длины. " +
+                    "Выберите другой день или включите автоподбор.");
+            }
+
+            task.ScheduledTime = start.Value;
         }
 
         quests.Add(task);
         selectedDate = task.TargetDate;
+        currentMonth = new DateTime(task.TargetDate.Year, task.TargetDate.Month, 1);
         activeTab = "work";
+
+        return Task.FromResult<string?>(null);
+    }
+
+    // Ищет первый день, куда помещается задача, И в нём находит время начала.
+    // Возвращает кортеж (день, время) или null.
+    // "(DateTime Date, TimeSpan Start)?" = кортеж, который может отсутствовать.
+    private (DateTime Date, TimeSpan Start)? FindDayForTask(int durationMinutes, DateTime from, int horizonDays)
+    {
+        double taskHours = durationMinutes / 60.0;
+
+        for (int i = 0; i < horizonDays; i++)
+        {
+            DateTime day = from.AddDays(i);
+
+            // 1) Проверка лимита нагрузки (шаг 4). Не хватает часов: пробуем следующий день.
+            if (GetAvailableHours(day) < taskHours) continue;
+
+            // 2) Проверка по часам: есть ли в этом дне реальное свободное окно?
+            TimeSpan? start = FindFreeStart(day, durationMinutes);
+            if (start != null) return (day, start.Value);
+        }
+
+        return null;
+    }
+
+    // Ищет время начала для задачи длиной durationMinutes в конкретный день.
+    // Возвращает время (например, 09:00) или null, если подходящего окна нет.
+    private TimeSpan? FindFreeStart(DateTime date, int durationMinutes)
+    {
+        var duration = TimeSpan.FromMinutes(durationMinutes);
+
+        var windowStart = PlanDayStart;
+        var windowEnd = PlanDayEnd;
+
+        // Очень длинная задача ("весь день играть") не влезет в окно 08:00-22:00,
+        // поэтому для неё разрешаем искать место в течение всех суток.
+        if (duration > windowEnd - windowStart)
+        {
+            windowStart = TimeSpan.Zero;
+            windowEnd = TimeSpan.FromHours(24);
+        }
+
+        // Для сегодняшнего дня нет смысла ставить задачу в прошлое:
+        // начинаем с текущего времени, округлённого вверх до 15 минут.
+        if (date.Date == DateTime.Today)
+        {
+            var now = DateTime.Now.TimeOfDay;
+            var rounded = TimeSpan.FromMinutes(Math.Ceiling(now.TotalMinutes / 15) * 15);
+            if (rounded > windowStart) windowStart = rounded;
+        }
+
+        // Собираем занятые промежутки этого дня и сортируем по началу.
+        // Пропущенные задачи время не занимают, выполненные занимают.
+        // GetValueOrDefault() достаёт TimeSpan из TimeSpan? (если пусто, будет 00:00).
+        var busy = quests
+            .Where(q => q.TargetDate.Date == date.Date && !q.IsSkipped && q.ScheduledTime.HasValue)
+            .Select(q => new
+            {
+                Start = q.ScheduledTime.GetValueOrDefault(),
+                End = q.ScheduledTime.GetValueOrDefault().Add(TimeSpan.FromMinutes(q.DurationMinutes))
+            })
+            .OrderBy(b => b.Start)
+            .ToList();
+
+        // cursor = "текущая точка", левый край ещё не проверенного свободного места
+        var cursor = windowStart;
+
+        foreach (var b in busy)
+        {
+            // Между cursor и началом занятого промежутка хватает места, и оно внутри окна?
+            if (b.Start - cursor >= duration && cursor + duration <= windowEnd)
+                return cursor;
+
+            // Иначе перепрыгиваем за конец этого промежутка (если он правее cursor)
+            if (b.End > cursor) cursor = b.End;
+        }
+
+        // Проверили все занятые промежутки. Остаётся хвост дня после последнего из них.
+        return cursor + duration <= windowEnd ? cursor : null;
     }
 
 
