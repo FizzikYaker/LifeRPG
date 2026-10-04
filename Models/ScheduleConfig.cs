@@ -2,15 +2,17 @@
 
 public enum SchedulePatternType
 {
-    Shift2_2_2_2,
-    Standard5_2,
+    Shift,
+    Standard,
     Flexible
 }
 
 public class ScheduleConfig
 {
-    public SchedulePatternType PatternType { get; set; } = SchedulePatternType.Shift2_2_2_2;
+    public SchedulePatternType PatternType { get; set; } = SchedulePatternType.Shift;
     public DateTime AnchorDate { get; set; } = new DateTime(2026, 9, 1);
+
+    public bool DayOrNight { get; set; } = false;
     public TimeSpan DayShiftWakeTime { get; set; } = new TimeSpan(6, 20, 0);
     public TimeSpan NightShiftWakeTime { get; set; } = new TimeSpan(18, 10, 0);
     public int ShiftDurationHours { get; set; } = 12;

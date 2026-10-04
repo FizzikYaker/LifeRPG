@@ -7,13 +7,13 @@
         <div class="col-md-4">
             <label class="form-label text-slate-300">Тип графика:</label>
             <select class="form-select" @bind="Config.PatternType">
-                <option value="@SchedulePatternType.Shift2_2_2_2">Смены 2/2 (день/ночь)</option>
-                <option value="@SchedulePatternType.Standard5_2">Пятидневка 5/2</option>
-                <option value="@SchedulePatternType.Flexible">Гибкий (N через M)</option>
+                <option value="@SchedulePatternType.Shift">Сменный(2/2)</option>
+                <option value="@SchedulePatternType.Standard">Фиксированный(5/2)</option>
+                <option value="@SchedulePatternType.Flexible">Гибкий(Р/Н)</option>
             </select>
         </div>
 
-        @if (Config.PatternType == SchedulePatternType.Flexible)
+        @if (Config.PatternType == SchedulePatternType.Flexible || Config.PatternType == SchedulePatternType.Shift)
         {
             <div class="col-md-4">
                 <label class="form-label text-slate-300">Рабочих дней подряд:</label>
@@ -23,6 +23,16 @@
                 <label class="form-label text-slate-300">Выходных дней подряд:</label>
                 <input type="number" min="1" class="form-control" @bind="Config.OffDaysInCycle" />
             </div>
+        }
+
+        @if (Config.PatternType == SchedulePatternType.Shift)
+        {
+            <div class="col-md-4">
+                <label class="form-label text-slate-300">День/Ночь:</label>
+                <input type="checkbox" class="form-control"
+                       @bind = "Config.DayOrNight" />
+            </div>
+        
         }
 
         <div class="col-md-4">

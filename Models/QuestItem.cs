@@ -47,7 +47,7 @@ public class QuestItem
     public int GetCalculatedReward()
     {
         if (IsSkipped) return 0;
-        if (Type == QuestType.WorkShift && IsNightShift) return RewardGold + 200;
+        if (Type == QuestType.Daily && IsNightShift) return RewardGold + 200;
         if (Type == QuestType.Daily && StreakDays >= 7) return (int)(RewardGold * 1.5);
         return RewardGold;
     }

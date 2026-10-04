@@ -45,10 +45,10 @@
         <div class="col-md-3">
             <label class="form-label text-slate-300 fw-bold">Категория:</label>
             <select class="form-select rpg-input" @bind="newTaskType">
-                <option value="@QuestType.WorkShift">Работа</option>
-                <option value="@QuestType.Study">Учеба</option>
-                <option value="@QuestType.PetProject">Pet-проект</option>
-                <option value="@QuestType.Daily">Привычка</option>
+                <option value="@QuestType.Daily">Ежедневная</option>
+                <option value="@QuestType.Weekly">Еженедельная</option>
+                <option value="@QuestType.Monthly">Ежемесячная</option>
+                <option value="@QuestType.YourСhoice">Свободное окно</option>
             </select>
         </div>
     </div>
@@ -104,7 +104,7 @@
     private DateTime newTaskDate = DateTime.Today;
     private int newTaskReward = 300;
     private int newTaskDuration = 60;
-    private QuestType newTaskType = QuestType.PetProject;
+    private QuestType newTaskType = QuestType.OneTime;
     private bool autoSchedule = false;
     private string errorMessage = "";
 

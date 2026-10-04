@@ -2,9 +2,9 @@
 
 public enum QuestType
 {
-    WorkShift,   // Смена на работе
-    Study,       // Учеба
-    PetProject,  // Личный проект / хобби
-    Daily,       // Ежедневная привычка
+    Daily,   // Каждый день
+    Weekly,       // Каждую неделю
+    Monthly,  // Каждый месяц
+    YourСhoice,       // Свой выбор
     OneTime      // Разовая задача
 }

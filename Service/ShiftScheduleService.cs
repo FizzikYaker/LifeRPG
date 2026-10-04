@@ -19,8 +19,8 @@ public class ShiftScheduleService
 
         return _config.PatternType switch
         {
-            SchedulePatternType.Shift2_2_2_2 => Get2222(daysDiff),
-            SchedulePatternType.Standard5_2 => GetStandard52(date),
+            SchedulePatternType.Shift => Get2222(daysDiff),
+            SchedulePatternType.Standard => GetStandard52(date),
             SchedulePatternType.Flexible => GetFlexible(daysDiff),
             _ => ShiftDayType.Off
         };
