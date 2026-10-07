@@ -29,19 +29,22 @@
         {
             <div class="col-md-4">
                 <label class="form-label text-slate-300">День/Ночь:</label>
-                <input type="checkbox" class="form-control"
+                <input type="checkbox" 
                        @bind = "Config.DayOrNight" />
             </div>
+            @if (Config.DayOrNigh)
+        {
+            <div class="col-md-4">
+                <label class="form-label text-slate-300">Дата отсчёта графика:</label>
+                <input type="date" class="form-control"
+                value="@Config.AnchorDate.ToString("yyyy-MM-dd")"
+                @onchange="OnAnchorDateChanged" />
+            </div>
+        }
         
         }
 
-        <div class="col-md-4">
-            <label class="form-label text-slate-300">Дата отсчёта графика:</label>
-            <input type="date" class="form-control"
-                   value="@Config.AnchorDate.ToString("yyyy-MM-dd")"
-                   @onchange="OnAnchorDateChanged" />
-        </div>
-
+        
         <div class="col-md-4">
             <label class="form-label text-slate-300">Подъём (дневная смена):</label>
             <input type="time" class="form-control"
