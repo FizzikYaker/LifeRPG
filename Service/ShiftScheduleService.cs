@@ -28,14 +28,37 @@ public class ShiftScheduleService
 
     private ShiftDayType Get2222(int daysDiff)
     {
-        int cycle = (daysDiff % 8 + 8) % 8;
-        return cycle switch
+        // Берём длины блоков из настроек. Math.Max(1, ...) защищает от нуля:
+        // если поле в панели очистить, получится 0, и деление на 0 уронило бы приложение.
+        int work = Math.Max(1, _config.WorkDaysInCycle);
+        int off = Math.Max(1, _config.OffDaysInCycle);
+
+        // --- Режим БЕЗ деления на день/ночь (галочка выключена) ---
+        if (!_config.DayOrNight)
         {
-            0 or 1 => ShiftDayType.Day,
-            2 or 3 => ShiftDayType.Off,
-            4 or 5 => ShiftDayType.Night,
-            _ => ShiftDayType.Off
-        };
+            int cycleLength = work + off; // например 2 + 2 = 4 дня в цикле
+
+            // (x % n + n) % n работает и для дат ДО точки отсчёта (отрицательный daysDiff)
+            int cycle = (daysDiff % cycleLength + cycleLength) % cycleLength;
+
+            // Первые 'work' дней цикла рабочие, остальные выходные
+            return cycle < work ? ShiftDayType.Work : ShiftDayType.Off;
+        }
+
+        // --- Режим С делением на день/ночь (галочка включена) ---
+        // Одна "половина" = рабочий блок + выходной блок (например 2 + 2 = 4 дня).
+        int half = work + off;
+
+        // Полный цикл = дневной блок и ночной блок (4 + 4 = 8 дней).
+        int fullCycle = half * 2;
+
+        // Позиция текущего дня внутри полного цикла: от 0 до fullCycle - 1
+        int pos = (daysDiff % fullCycle + fullCycle) % fullCycle;
+
+        if (pos < work) return ShiftDayType.Day;         // 1-й блок: дневные смены
+        if (pos < half) return ShiftDayType.Off;         // выходные после дневных
+        if (pos < half + work) return ShiftDayType.Night; // 2-й блок: ночные смены
+        return ShiftDayType.Off;                          // выходные после ночных
     }
 
     private ShiftDayType GetStandard52(DateTime date)
